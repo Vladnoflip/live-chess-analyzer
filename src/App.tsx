@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Square } from 'chess.js';
-import { useAnalysis, useDrill, useExplorer, useServices } from './hooks/useAnalysis';
+import { useAnalysis, useDrill, useExplorer, useI18n, useServices } from './hooks/useAnalysis';
 import type { AnalysisState } from './core/analysis.manager';
+import type { MessageKey, MessageParams } from './core/i18n';
 import { START_FEN } from './services/board.service';
 import { Board } from './components/Board';
 import { EvalBar } from './components/EvalBar';
@@ -15,10 +16,10 @@ import { DrillPanel } from './components/DrillPanel';
 
 type Mode = 'analysis' | 'explorer' | 'drill';
 
-const MODES: readonly { id: Mode; title: string }[] = [
-  { id: 'analysis', title: 'Анализ' },
-  { id: 'explorer', title: 'Дебюты' },
-  { id: 'drill', title: 'Тренажёр' },
+const MODES: readonly { id: Mode; title: MessageKey }[] = [
+  { id: 'analysis', title: 'mode.analysis' },
+  { id: 'explorer', title: 'mode.explorer' },
+  { id: 'drill', title: 'mode.drill' },
 ];
 
 export function App() {
@@ -26,6 +27,13 @@ export function App() {
   const state = useAnalysis();
   const explorerState = useExplorer();
   const drillState = useDrill();
+  const { t, locale } = useI18n();
+
+  // Keep <html lang> and the tab title in sync with the UI language.
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.title = t('app.pageTitle');
+  }, [locale]);
   const [flipped, setFlipped] = useState(false);
   const [mode, setMode] = useState<Mode>('analysis');
 
@@ -82,14 +90,14 @@ export function App() {
       <header className="app-head">
         <h1>LiveChess Analyzer</h1>
         {title && <span className="game-title">{title}</span>}
-        <nav className="modes" aria-label="Режим">
+        <nav className="modes" aria-label={t('mode.label')}>
           {MODES.map((m) => (
             <button key={m.id} className={mode === m.id ? 'active' : ''} onClick={() => switchMode(m.id)}>
-              {m.title}
+              {t(m.title)}
             </button>
           ))}
         </nav>
-        <span className="muted small-text">Всё считается локально в браузере</span>
+        <span className="muted small-text">{t('app.localNote')}</span>
       </header>
 
       <main className="layout">
@@ -98,12 +106,12 @@ export function App() {
           <div className="board-wrap">
             <div className={`opening-strip ${position.inBook ? 'in' : 'out'}`}>
               {explorerState.status !== 'ready'
-                ? 'Книга дебютов загружается…'
+                ? t('strip.loading')
                 : position.opening
-                  ? `${position.opening.name} · ${position.opening.eco}${position.inBook ? '' : ' · вне теории'}`
+                  ? t(position.inBook ? 'strip.opening' : 'strip.openingOut', { name: position.opening.name, eco: position.opening.eco })
                   : position.inBook
-                    ? 'Начальная позиция'
-                    : 'Вне теории'}
+                    ? t('strip.start')
+                    : t('strip.out')}
             </div>
             <Board
               pieces={pieces}
@@ -116,11 +124,11 @@ export function App() {
             />
             {!drilling && (
               <div className="nav">
-                <button onClick={() => manager.goTo(0)} title="В начало (Home)">⏮</button>
-                <button onClick={() => manager.prev()} title="Назад (←)">◀</button>
-                <button onClick={() => manager.next()} title="Вперёд (→)">▶</button>
-                <button onClick={() => manager.goTo(state.moves.length)} title="В конец (End)">⏭</button>
-                <button onClick={() => setFlipped((f) => !f)} title="Перевернуть доску (F)">⇅</button>
+                <button onClick={() => manager.goTo(0)} title={t('nav.first')}>⏮</button>
+                <button onClick={() => manager.prev()} title={t('nav.prev')}>◀</button>
+                <button onClick={() => manager.next()} title={t('nav.next')}>▶</button>
+                <button onClick={() => manager.goTo(state.moves.length)} title={t('nav.last')}>⏭</button>
+                <button onClick={() => setFlipped((f) => !f)} title={t('nav.flip')}>⇅</button>
               </div>
             )}
           </div>
@@ -159,7 +167,7 @@ export function App() {
               candidates={state.candidates}
               selectedRank={state.selectedRank}
               explanation={state.explanation}
-              explanationTitle={explanationTitle(state)}
+              explanationTitle={explanationTitle(state, t)}
               onSelect={(rank) => manager.selectCandidate(rank)}
             />
           )}
@@ -200,11 +208,11 @@ export function App() {
   );
 }
 
-function explanationTitle(state: AnalysisState): string | null {
+function explanationTitle(state: AnalysisState, t: (key: MessageKey, params?: MessageParams) => string): string | null {
   const selected = state.candidates.find((c) => c.rank === state.selectedRank);
-  if (selected) return `Разбор варианта ${selected.sanMove}`;
+  if (selected) return t('explain.titleVariant', { san: selected.sanMove });
   const move = state.moves[state.ply - 1];
   if (!move) return null;
   const n = Number(move.fenBefore.split(' ')[5] ?? '1');
-  return `Разбор хода ${n}${move.color === 'w' ? '.' : '…'} ${move.san}`;
+  return t('explain.titleMove', { move: `${n}${move.color === 'w' ? '.' : '…'} ${move.san}` });
 }

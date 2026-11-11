@@ -1,9 +1,10 @@
-import { useServices, useSound } from '../hooks/useAnalysis';
+import { useI18n, useServices, useSound } from '../hooks/useAnalysis';
 
 /** Sound on/off + volume; shared by the app settings and the trainer site header. */
 export function SoundControls({ compact = false }: { compact?: boolean }) {
   const { sound } = useServices();
   const { enabled, volume } = useSound();
+  const { t } = useI18n();
   return (
     <div className={`sound-controls${compact ? ' compact' : ''}`}>
       <button
@@ -13,11 +14,11 @@ export function SoundControls({ compact = false }: { compact?: boolean }) {
           sound.unlock();
           if (!enabled) sound.play('move');
         }}
-        title={enabled ? 'Выключить звук ходов' : 'Включить звук ходов'}
+        title={enabled ? t('sound.turnOff') : t('sound.turnOn')}
         aria-pressed={enabled}
       >
         {enabled ? '🔊' : '🔇'}
-        {!compact && <span>{enabled ? ' Звук ходов' : ' Звук выключен'}</span>}
+        {!compact && <span> {enabled ? t('sound.on') : t('sound.off')}</span>}
       </button>
       <input
         type="range"
@@ -25,7 +26,7 @@ export function SoundControls({ compact = false }: { compact?: boolean }) {
         max={100}
         value={volume}
         disabled={!enabled}
-        aria-label="Громкость"
+        aria-label={t('sound.volume')}
         onChange={(e) => sound.update({ volume: Number(e.target.value) })}
         onPointerUp={() => sound.play('capture')}
       />

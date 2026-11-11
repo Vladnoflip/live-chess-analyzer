@@ -1,9 +1,18 @@
 import { Chess, DEFAULT_POSITION, validateFen, type Square, type PieceSymbol } from 'chess.js';
 import type { Color } from '../core/types';
+import { msg, type Msg } from '../core/i18n';
 
 export const START_FEN = DEFAULT_POSITION;
 
-export type FenValidation = { readonly ok: true; readonly fen: string } | { readonly ok: false; readonly error: string };
+export type FenValidation = { readonly ok: true; readonly fen: string } | { readonly ok: false; readonly error: Msg };
+
+/** Thrown by parsePgn; `detail` is chess.js's (English) reason. */
+export class PgnParseError extends Error {
+  constructor(readonly detail: string) {
+    super(`Cannot parse PGN: ${detail}`);
+    this.name = 'PgnParseError';
+  }
+}
 
 export interface BoardPiece {
   readonly square: Square;
@@ -47,24 +56,24 @@ export class BoardService {
   /** Validates a FEN, normalising surrounding whitespace. Also rejects positions chess.js accepts but no engine should see. */
   validate(input: string): FenValidation {
     const fen = input.trim().replace(/\s+/g, ' ');
-    if (fen.length === 0) return { ok: false, error: 'Пустой FEN' };
+    if (fen.length === 0) return { ok: false, error: msg('fen.empty') };
 
     const basic = validateFen(fen);
     if (!basic.ok) {
       const detail = (basic.error ?? '').replace(/^Invalid FEN:\s*/i, '');
-      return { ok: false, error: detail ? `Некорректный FEN: ${detail}` : 'Некорректный FEN' };
+      return { ok: false, error: detail ? msg('fen.invalidDetail', { detail }) : msg('fen.invalid') };
     }
 
     const placement = fen.split(' ')[0] ?? '';
     const whiteKings = countChar(placement, 'K');
     const blackKings = countChar(placement, 'k');
     if (whiteKings !== 1 || blackKings !== 1) {
-      return { ok: false, error: 'У каждой стороны должен быть ровно один король' };
+      return { ok: false, error: msg('fen.kings') };
     }
 
     const ranks = placement.split('/');
     if (/[pP]/.test(ranks[0] ?? '') || /[pP]/.test(ranks[7] ?? '')) {
-      return { ok: false, error: 'Пешки не могут стоять на 1-й или 8-й горизонтали' };
+      return { ok: false, error: msg('fen.pawnsBackRank') };
     }
 
     // The side NOT to move must not be in check — otherwise the king could be captured.
@@ -74,10 +83,10 @@ export class BoardService {
     );
     try {
       if (new Chess(flipped).inCheck()) {
-        return { ok: false, error: 'Король стороны, которая не ходит, находится под шахом' };
+        return { ok: false, error: msg('fen.sideNotToMoveInCheck') };
       }
     } catch {
-      return { ok: false, error: 'Некорректный FEN' };
+      return { ok: false, error: msg('fen.invalid') };
     }
 
     return { ok: true, fen };
@@ -158,7 +167,7 @@ export class BoardService {
     try {
       chess.loadPgn(pgn.trim());
     } catch (e) {
-      throw new Error(`Не удалось разобрать PGN: ${e instanceof Error ? e.message : String(e)}`);
+      throw new PgnParseError(e instanceof Error ? e.message : String(e));
     }
     const headers = chess.getHeaders();
     const history = chess.history({ verbose: true });

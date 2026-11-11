@@ -1,23 +1,26 @@
 import type { LiveView } from '../core/analysis.manager';
 import { formatCount, formatDuration, formatScore } from '../core/format';
+import type { MessageKey } from '../core/i18n';
+import { useI18n } from '../hooks/useAnalysis';
 
-const STATUS_TEXT: Record<LiveView['status'], string> = {
-  loading: 'Загрузка движка…',
-  idle: 'Ожидание',
-  searching: 'Анализ…',
-  done: 'Готово',
-  error: 'Ошибка',
+const STATUS_TEXT: Record<LiveView['status'], MessageKey> = {
+  loading: 'engine.status.loading',
+  idle: 'engine.status.idle',
+  searching: 'engine.status.searching',
+  done: 'engine.status.done',
+  error: 'engine.status.error',
 };
 
 export function EnginePanel({ live, engineName, threads }: { live: LiveView; engineName: string; threads: number }) {
+  const { t, text } = useI18n();
   return (
     <section className="panel engine-panel">
       <header className="panel-head">
         <span className="engine-name">{engineName}</span>
         <span className={`status status-${live.status}`}>
           {(live.status === 'searching' || live.status === 'loading') && <span className="spinner" />}
-          {STATUS_TEXT[live.status]}
-          {live.fromCache && live.status === 'done' ? ' (кэш)' : ''}
+          {t(STATUS_TEXT[live.status])}
+          {live.fromCache && live.status === 'done' ? t('engine.cached') : ''}
         </span>
       </header>
 
@@ -28,34 +31,34 @@ export function EnginePanel({ live, engineName, threads }: { live: LiveView; eng
           <div className="engine-main">
             <span className="engine-score">{formatScore(live.score)}</span>
             <div className="engine-best">
-              <span className="muted">Лучший ход</span>
+              <span className="muted">{t('engine.bestMove')}</span>
               <strong>{live.bestMoveSan ?? '—'}</strong>
               {live.bestMoveUci && <code>{live.bestMoveUci}</code>}
             </div>
           </div>
           <p className="pv">
-            <span className="muted">PV: </span>
+            <span className="muted">{t('engine.pv')}</span>
             {live.pvSan.length ? live.pvSan.join(' ') : '—'}
           </p>
           <dl className="stats">
             <div>
-              <dt>Глубина</dt>
+              <dt>{t('engine.depth')}</dt>
               <dd>{live.depth || '—'}</dd>
             </div>
             <div>
-              <dt>Время</dt>
-              <dd>{live.fromCache ? '—' : formatDuration(live.elapsedMs)}</dd>
+              <dt>{t('engine.time')}</dt>
+              <dd>{live.fromCache ? '—' : text(formatDuration(live.elapsedMs))}</dd>
             </div>
             <div>
-              <dt>Узлы</dt>
+              <dt>{t('engine.nodes')}</dt>
               <dd>{formatCount(live.nodes)}</dd>
             </div>
             <div>
-              <dt>Узлов/с</dt>
+              <dt>{t('engine.nps')}</dt>
               <dd>{formatCount(live.nps)}</dd>
             </div>
             <div>
-              <dt>Потоки</dt>
+              <dt>{t('engine.threads')}</dt>
               <dd>{threads}</dd>
             </div>
           </dl>

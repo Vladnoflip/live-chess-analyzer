@@ -1,4 +1,5 @@
 import { DEPTH_LIMITS, FONTS, loadSettings, saveSettings, type ExtensionSettings, type FontId } from './shared/settings';
+import { DICTIONARY_KEYS, isLocalePref, resolveLocale, translate, type Locale, type MessageKey } from '../src/core/i18n';
 
 type BoolKey = 'enabled' | 'showArrow' | 'showEvalBar' | 'onlyMyTurn' | 'showPanel' | 'showOpening';
 type NumKey = 'depth' | 'threads' | 'hashMb';
@@ -12,8 +13,30 @@ function el<T extends HTMLElement>(id: string): T {
   return node as T;
 }
 
+/** Fills every [data-i18n] element (text) from the dictionary of `locale`. */
+function applyTexts(locale: Locale): void {
+  document.documentElement.lang = locale;
+  for (const node of document.querySelectorAll<HTMLElement>('[data-i18n]')) {
+    const key = node.dataset.i18n;
+    if (key && DICTIONARY_KEYS.has(key)) node.textContent = translate(locale, key as MessageKey);
+  }
+  for (const opt of document.querySelectorAll<HTMLOptionElement>('#fontFamily option')) {
+    const font = FONTS[opt.value as FontId];
+    if (font) opt.textContent = translate(locale, font.label);
+  }
+}
+
 async function main(): Promise<void> {
   const settings: ExtensionSettings = await loadSettings();
+
+  const localeSelect = el<HTMLSelectElement>('locale');
+  localeSelect.value = settings.locale;
+  localeSelect.addEventListener('change', () => {
+    const pref = localeSelect.value;
+    if (!isLocalePref(pref)) return;
+    applyTexts(resolveLocale(pref, navigator.language));
+    void saveSettings({ locale: pref });
+  });
 
   const depth = el<HTMLInputElement>('depth');
   depth.min = String(DEPTH_LIMITS.min);
@@ -33,7 +56,6 @@ async function main(): Promise<void> {
   for (const [id, f] of Object.entries(FONTS)) {
     const opt = document.createElement('option');
     opt.value = id;
-    opt.textContent = f.label;
     opt.style.fontFamily = f.stack;
     fontFamily.append(opt);
   }
@@ -59,6 +81,8 @@ async function main(): Promise<void> {
     void chrome.tabs.create({ url: chrome.runtime.getURL('extension/trainer.html') });
     window.close();
   });
+
+  applyTexts(resolveLocale(settings.locale, navigator.language));
 
   const multiPv = el<HTMLSelectElement>('multiPv');
   multiPv.value = String(settings.multiPv);

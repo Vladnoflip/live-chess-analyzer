@@ -4,6 +4,7 @@ import type { GameMove } from '../services/board.service';
 import { MOVE_CLASS_LABEL } from '../core/format';
 import type { PlayedMoveScore, ReviewProgress } from '../core/analysis.manager';
 import { scoreToColor } from '../core/move-score';
+import { useI18n } from '../hooks/useAnalysis';
 
 export interface MoveListProps {
   moves: readonly GameMove[];
@@ -19,6 +20,7 @@ export interface MoveListProps {
 }
 
 export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, onSelect, onReview, onCancelReview }: MoveListProps) {
+  const { t } = useI18n();
   const activeRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
     // Scroll only the move list itself; scrollIntoView would also scroll the page away from the board.
@@ -48,12 +50,12 @@ export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, o
         ref={move.ply === ply ? activeRef : undefined}
         className={`move${move.ply === ply ? ' active' : ''}${cls ? ` cls-${cls}` : ''}`}
         onClick={() => onSelect(move.ply)}
-        title={cls ? `${MOVE_CLASS_LABEL[cls].label}${ms ? ` · ${ms.score}/100` : ''}` : undefined}
+        title={cls ? (ms ? t('moves.scoreTitle', { label: t(MOVE_CLASS_LABEL[cls].label), score: ms.score }) : t(MOVE_CLASS_LABEL[cls].label)) : undefined}
       >
         <span>
           {ms && <span className={`score-dot${ms.brilliant ? ' glow' : ''}`} style={{ background: scoreToColor(ms.score, ms.brilliant) }} />}
           {move.san}
-          {bookPlies?.has(move.ply) && <span className="book-mark" title="Ход теории">📖</span>}
+          {bookPlies?.has(move.ply) && <span className="book-mark" title={t('moves.bookMove')}>📖</span>}
         </span>
         {cls && cls !== 'good' && <span className="badge">{MOVE_CLASS_LABEL[cls].symbol}</span>}
       </button>
@@ -68,17 +70,17 @@ export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, o
   return (
     <section className="panel moves-panel">
       <header className="panel-head">
-        <span>Ходы</span>
+        <span>{t('moves.title')}</span>
         {review?.running ? (
           <span className="review">
             <span className="spinner" /> {review.done}/{review.total}
             <button className="link" onClick={onCancelReview}>
-              стоп
+              {t('moves.stop')}
             </button>
           </span>
         ) : (
           <button className="small" disabled={moves.length === 0} onClick={onReview}>
-            Разобрать партию
+            {t('moves.review')}
           </button>
         )}
       </header>
@@ -89,7 +91,7 @@ export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, o
       )}
       <div className="move-scroll">
         {moves.length === 0 ? (
-          <p className="muted">Нет ходов. Загрузите PGN или сделайте ход на доске.</p>
+          <p className="muted">{t('moves.empty')}</p>
         ) : (
           <ol className="move-rows">
             {rows.map((row, i) => (
@@ -106,7 +108,7 @@ export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, o
         <ul className="legend">
           {(Object.keys(MOVE_CLASS_LABEL) as MoveClass[]).map((c) => (
             <li key={c} className={`cls-${c}`}>
-              <span className="badge">{MOVE_CLASS_LABEL[c].symbol}</span> {MOVE_CLASS_LABEL[c].label}: {counts[c]}
+              <span className="badge">{MOVE_CLASS_LABEL[c].symbol}</span> {t('class.count', { label: t(MOVE_CLASS_LABEL[c].label), n: counts[c] })}
             </li>
           ))}
         </ul>

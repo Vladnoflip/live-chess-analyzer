@@ -39,12 +39,15 @@ try {
 
   // ── 1. Analyzer: MultiPV arrows with 0–100 badges, brilliant move selected ──
   const app = await browser.newPage();
+  // Force the English UI (the app otherwise follows navigator.language).
+  await app.evaluateOnNewDocument(() => localStorage.setItem('livechess.locale.v1', 'en'));
   await app.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'dark' }]);
   await app.goto(`http://localhost:${PORT}/`, { waitUntil: 'networkidle0' });
   await setFen(app, LEGAL);
   await waitForCandidates(app, 3);
   await app.evaluate(() => document.querySelector('.variant')?.click());
   await sleep(600);
+  await assertEnglish(app, 'analyzer');
   await app.screenshot({ path: join(out, 'analyzer.png') });
 
   // ── 2. Variants panel: MultiPV 5, coloured score bars ──
@@ -53,6 +56,7 @@ try {
   await waitForCandidates(app, 5);
   await sleep(500);
   const panel = await app.$('.variants-panel');
+  await assertEnglish(app, 'variants panel');
   await panel.screenshot({ path: join(out, 'variants-panel.png') });
   await app.close();
 
@@ -79,15 +83,21 @@ try {
   // ── 4/5. Trainer site: section cards, then a training position after a mistake ──
   const swTarget = await browser.waitForTarget((t) => t.type() === 'service_worker' && t.url().startsWith('chrome-extension://'));
   const extId = new URL(swTarget.url()).host;
+  const sw = await swTarget.worker();
+  await sw.evaluate(async () => {
+    const { settings } = await chrome.storage.sync.get('settings');
+    await chrome.storage.sync.set({ settings: { ...(settings ?? {}), locale: 'en' } });
+  });
   const trainer = await browser.newPage();
   await trainer.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await trainer.goto(`chrome-extension://${extId}/extension/trainer.html`);
-  await trainer.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent === 'Начать тренировку'), { timeout: 20000 });
-  await trainer.evaluate(() => [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('Индийские защиты'))?.click());
+  await trainer.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent === 'Start training'), { timeout: 20000 });
+  await trainer.evaluate(() => [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('Indian defences'))?.click());
   await sleep(300);
+  await assertEnglish(trainer, 'trainer sections');
   await trainer.screenshot({ path: join(out, 'trainer-sections.png') });
 
-  await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Начать тренировку')?.click());
+  await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Start training')?.click());
   await trainer.waitForFunction(() => document.querySelector('.move-strip')?.textContent?.includes('d4'), { timeout: 15000 });
   await sleep(600);
   // Drag a non-book move with the mouse (1...a5) to show feedback and engine hints.
@@ -102,10 +112,11 @@ try {
   await trainer.mouse.down();
   await trainer.mouse.move(to.x, to.y, { steps: 10 });
   await trainer.mouse.up();
-  await trainer.waitForFunction(() => document.querySelectorAll('.hints li').length >= 3 && document.querySelector('.hints .muted')?.textContent !== 'считает…', {
+  await trainer.waitForFunction(() => document.querySelectorAll('.hints li').length >= 3 && document.querySelector('.hints .muted')?.textContent !== 'thinking…', {
     timeout: 30000,
   });
   await sleep(800);
+  await assertEnglish(trainer, 'trainer training');
   await trainer.screenshot({ path: join(out, 'trainer-training.png') });
   await trainer.close();
 
@@ -113,6 +124,13 @@ try {
 } finally {
   await browser.close();
   preview.kill();
+}
+
+/** Screenshots must show the English UI only. */
+async function assertEnglish(page, what) {
+  // The language picker lists Russian by its own name (endonym); that is expected.
+  const sample = await page.evaluate(() => (document.body.innerText.replace(/Русский/g, '').match(/[^\n]*[А-Яа-яЁё][^\n]*/) ?? [null])[0]);
+  if (sample) throw new Error(`Russian text on the ${what} screenshot: ${sample}`);
 }
 
 async function waitForServer(url) {
@@ -138,7 +156,7 @@ async function setFen(page, fen) {
 
 async function waitForCandidates(page, n) {
   await page.waitForFunction(
-    (n) => document.querySelector('.status')?.textContent?.startsWith('Готово') && document.querySelectorAll('.variant').length >= n,
+    (n) => document.querySelector('.status')?.textContent?.startsWith('Done') && document.querySelectorAll('.variant').length >= n,
     { timeout: 60000 },
     n,
   );

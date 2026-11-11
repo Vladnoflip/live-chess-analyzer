@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { DRILL_SECTIONS, type DrillState } from '../core/drill.manager';
 import type { Color } from '../core/types';
+import { useI18n } from '../hooks/useAnalysis';
 
 export interface DrillPanelProps {
   state: DrillState;
@@ -17,29 +18,31 @@ export function DrillPanel({ state, bookReady, onStart, onRestart, onStop, onRev
   const [color, setColor] = useState<Color>(section.defaultColor);
   const [maxMoves, setMaxMoves] = useState(state.maxMoves);
   const { stats } = state;
+  const { t, text } = useI18n();
   const total = state.totals[state.status === 'idle' ? sectionId : state.sectionId];
 
   return (
     <section className="panel drill-panel">
       <header className="panel-head">
-        <span>Тренажёр дебютов</span>
+        <span>{t('drill.title')}</span>
         {state.status !== 'idle' && (
           <span className="muted small-text">
-            позиций {stats.positions} · верно {stats.correct} · ошибок {stats.errors}
+            {t('drill.sessionStats', { positions: stats.positions, correct: stats.correct, errors: stats.errors })}
           </span>
         )}
       </header>
 
       {total && (
         <p className="muted small-text drill-totals">
-          За всё время в разделе: линий {total.lines} · верно {total.correct} · ошибок {total.errors}
-          {total.positions > 0 ? ` · точность ${Math.round((100 * total.correct) / total.positions)}%` : ''}
+          {total.positions > 0
+            ? t('drill.totalsAccuracy', { lines: total.lines, correct: total.correct, errors: total.errors, pct: Math.round((100 * total.correct) / total.positions) })
+            : t('drill.totals', { lines: total.lines, correct: total.correct, errors: total.errors })}
         </p>
       )}
       {state.status === 'idle' ? (
         <div className="drill-setup">
           <label>
-            Раздел
+            {t('drill.section')}
             <select
               value={sectionId}
               onChange={(e) => {
@@ -50,47 +53,47 @@ export function DrillPanel({ state, bookReady, onStart, onRestart, onStop, onRev
             >
               {DRILL_SECTIONS.map((s) => (
                 <option key={s.id} value={s.id}>
-                  {s.title}
+                  {t(s.title)}
                 </option>
               ))}
             </select>
           </label>
           <label>
-            Играю
+            {t('drill.playAs')}
             <select value={color} onChange={(e) => setColor(e.target.value === 'b' ? 'b' : 'w')}>
-              <option value="w">белыми</option>
-              <option value="b">чёрными</option>
+              <option value="w">{t('drill.white')}</option>
+              <option value="b">{t('drill.black')}</option>
             </select>
           </label>
           <label>
-            Ходов
+            {t('drill.moves')}
             <input type="number" min={1} max={30} value={maxMoves} onChange={(e) => setMaxMoves(Number(e.target.value) || 10)} />
           </label>
           <button disabled={!bookReady} onClick={() => onStart({ sectionId, userColor: color, maxMoves })}>
-            {bookReady ? 'Начать' : 'Загрузка книги…'}
+            {bookReady ? t('drill.start') : t('drill.loadingBook')}
           </button>
         </div>
       ) : (
         <>
           {state.openingName && <div className="drill-opening">{state.openingName}</div>}
-          {state.message && <p className={`drill-message tone-${state.message.tone}`}>{state.message.text}</p>}
+          {state.message && <p className={`drill-message tone-${state.message.tone}`}>{text(state.message)}</p>}
           <div className="row-buttons">
             {state.status === 'playing' && state.expected.length > 0 && (
               <button className="small" onClick={onReveal}>
-                Показать ход теории
+                {t('drill.reveal')}
               </button>
             )}
             <button className="small" onClick={onRestart}>
-              Заново
+              {t('drill.again')}
             </button>
             <button className="small" onClick={onStop}>
-              Выйти
+              {t('drill.exit')}
             </button>
           </div>
           <p className="muted small-text">
             {state.status === 'playing'
-              ? `Вы играете ${state.userColor === 'w' ? 'белыми' : 'чёрными'}. Подсказки движка появятся после ошибки.`
-              : 'Линия завершена.'}
+              ? t(state.userColor === 'w' ? 'drill.youPlayWhite' : 'drill.youPlayBlack')
+              : t('drill.lineFinished')}
           </p>
         </>
       )}

@@ -2,6 +2,23 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] — Bilingual UI
+
+### Added
+- English interface alongside Russian across the whole UI: the web app (analyzer, openings, trainer mode) and the extension (popup and trainer page). The overlay itself only shows scores, SAN moves and opening names, so it has no text to translate.
+- Automatic language detection from `navigator.language`: a Russian system language gives the Russian UI, anything else gives English.
+- Manual language override:
+  - in the web app under *Engine settings → Language*, saved in `localStorage`;
+  - in the extension popup under *Language*, saved in `chrome.storage.sync` and also used by the trainer page.
+- Dictionaries in `src/locales/en.json` and `src/locales/ru.json` (213 keys). TypeScript rejects a key missing from the Russian dictionary, and tests check that both dictionaries have the same keys and placeholders.
+- End-to-end checks for the popup in both languages and for an English-only trainer page.
+
+### Changed
+- Core modules return translatable messages (`{ key, params }`) instead of Russian strings: move explanations, trainer feedback, FEN/PGN validation errors, move-class labels and durations. Text that is already on screen switches language immediately.
+- `npm run screenshots` forces the English UI and refuses to save a screenshot that contains Russian text. All five images in `docs/screenshots/` were re-captured in English.
+- Technical engine and data errors are now in English.
+- README: the interface is no longer described as Russian-only.
+
 ## [0.4.0] — Phase 3D
 
 ### Added
@@ -48,4 +65,5 @@ All notable changes to this project are documented here. The format follows [Kee
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.5.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.4.0

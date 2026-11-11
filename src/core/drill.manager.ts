@@ -1,12 +1,14 @@
 import { Store } from './observable';
 import type { OpeningBook, OpeningFilter, BookMove } from './openings';
 import type { Color } from './types';
+import type { MessageKey, MessageParams, Msg } from './i18n';
 import type { BoardService } from '../services/board.service';
 import { START_FEN } from '../services/board.service';
 
 export interface DrillSection {
   readonly id: string;
-  readonly title: string;
+  /** i18n key of the section name. */
+  readonly title: MessageKey;
   readonly filter: OpeningFilter;
   /** Side the user plays by default in this section. */
   readonly defaultColor: Color;
@@ -14,17 +16,26 @@ export interface DrillSection {
 
 /** Trainer sections are plain filters over the book. */
 export const DRILL_SECTIONS: readonly DrillSection[] = [
-  { id: 'all', title: 'Общий обзор', filter: {}, defaultColor: 'w' },
+  { id: 'all', title: 'section.all', filter: {}, defaultColor: 'w' },
   // "Indian Defense" excludes the King's Indian Attack (a White system); A45+ skips flank openings.
-  { id: 'indian', title: 'Индийские защиты', filter: { query: 'indian defense', ecoFrom: 'A45' }, defaultColor: 'b' },
-  { id: 'gambits', title: 'Гамбиты', filter: { query: 'gambit' }, defaultColor: 'w' },
-  { id: 'sicilian', title: 'Сицилианская защита', filter: { query: 'sicilian defense' }, defaultColor: 'b' },
-  { id: 'french', title: 'Французская защита', filter: { query: 'french defense' }, defaultColor: 'b' },
-  { id: 'caro', title: 'Защита Каро-Канн', filter: { query: 'caro-kann' }, defaultColor: 'b' },
-  { id: 'slav', title: 'Славянская защита', filter: { query: 'slav defense' }, defaultColor: 'b' },
+  { id: 'indian', title: 'section.indian', filter: { query: 'indian defense', ecoFrom: 'A45' }, defaultColor: 'b' },
+  { id: 'gambits', title: 'section.gambits', filter: { query: 'gambit' }, defaultColor: 'w' },
+  { id: 'sicilian', title: 'section.sicilian', filter: { query: 'sicilian defense' }, defaultColor: 'b' },
+  { id: 'french', title: 'section.french', filter: { query: 'french defense' }, defaultColor: 'b' },
+  { id: 'caro', title: 'section.caro', filter: { query: 'caro-kann' }, defaultColor: 'b' },
+  { id: 'slav', title: 'section.slav', filter: { query: 'slav defense' }, defaultColor: 'b' },
 ];
 
 export type DrillTone = 'good' | 'bad' | 'info';
+
+/** Feedback shown to the user; translated by the UI. */
+export interface DrillMessage extends Msg {
+  readonly tone: DrillTone;
+}
+
+function note(tone: DrillTone, key: MessageKey, params?: MessageParams): DrillMessage {
+  return params ? { tone, key, params } : { tone, key };
+}
 
 export interface DrillState {
   readonly status: 'idle' | 'playing' | 'finished';
@@ -35,7 +46,7 @@ export interface DrillState {
   readonly fen: string;
   /** Moves played so far from the start position (UCI). */
   readonly line: readonly string[];
-  readonly message: { readonly tone: DrillTone; readonly text: string } | null;
+  readonly message: DrillMessage | null;
   /** Book answers after a wrong move (SAN), for the "theory plays …" hint. */
   readonly expected: readonly string[];
   readonly openingName: string | null;
@@ -134,7 +145,7 @@ export class DrillManager extends Store<DrillState> {
       maxMoves: Math.max(1, options.maxMoves ?? this.getState().maxMoves),
       fen: START_FEN,
       line: [],
-      message: { tone: 'info', text: 'Ваш ход' },
+      message: note('info', 'drill.msg.yourMove'),
       expected: [],
       openingName: null,
       hintsVisible: false,
@@ -177,7 +188,7 @@ export class DrillManager extends Store<DrillState> {
       this.setState({
         stats: { ...s.stats, positions: s.stats.positions + 1, correct: s.stats.correct + 1 },
         totals: this.bumpTotals(s.sectionId, { positions: 1, correct: 1 }),
-        message: { tone: 'good', text: `Верно: ${san}` },
+        message: note('good', 'drill.msg.correct', { san }),
         expected: [],
         hintsVisible: false,
       });
@@ -192,12 +203,7 @@ export class DrillManager extends Store<DrillState> {
       totals: this.bumpTotals(s.sectionId, { positions: 1, errors: 1 }),
       stats: { ...s.stats, positions: s.stats.positions + 1, errors: s.stats.errors + 1 },
       expected,
-      message: {
-        tone: 'bad',
-        text: outsideSection
-          ? `${san} — книжный ход, но ведёт за пределы раздела. Здесь теория играет ${expected.join(' / ')}`
-          : `Это ход ${san}, теория играет ${expected.join(' / ')}. Попробуйте ещё раз`,
-      },
+      message: note('bad', outsideSection ? 'drill.msg.outsideSection' : 'drill.msg.wrong', { san, expected: expected.join(' / ') }),
     });
     return false;
   }
@@ -206,7 +212,7 @@ export class DrillManager extends Store<DrillState> {
   reveal(): void {
     const first = this.bookMoves()[0];
     if (!first || !this.isUserTurn()) return;
-    this.setState({ message: { tone: 'info', text: `Теория: ${first.san}` }, expected: [] });
+    this.setState({ message: note('info', 'drill.msg.theory', { san: first.san }), expected: [] });
     this.play(first.uci);
   }
 
@@ -236,10 +242,12 @@ export class DrillManager extends Store<DrillState> {
         status: 'finished',
         hintsVisible: true,
         totals: this.bumpTotals(s.sectionId, { lines: 1 }),
-        message: {
-          tone: 'info',
-          text: moves.length === 0 ? `Линия закончена: ${s.openingName ?? 'конец теории'}` : `Пройдено ${s.maxMoves} ходов`,
-        },
+        message:
+          moves.length > 0
+            ? note('info', 'drill.msg.maxMoves', { n: s.maxMoves })
+            : s.openingName
+              ? note('info', 'drill.msg.lineOverNamed', { opening: s.openingName })
+              : note('info', 'drill.msg.lineOver'),
       });
       return;
     }
@@ -336,7 +344,7 @@ export class DrillManager extends Store<DrillState> {
       stats: { positions: num(stats.positions), correct: num(stats.correct), errors: num(stats.errors) },
       totals,
       hintsVisible: status !== 'playing',
-      message: status === 'idle' ? null : { tone: 'info', text: 'Прогресс восстановлен — продолжайте' },
+      message: status === 'idle' ? null : note('info', 'drill.msg.restored'),
     };
   }
 

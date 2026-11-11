@@ -4,6 +4,7 @@ import { OpeningBook } from '../src/core/openings';
 import { BoardService, START_FEN } from '../src/services/board.service';
 import { scoreToStepColor, textColorOn, BRILLIANT_COLOR } from '../src/core/move-score';
 import { arrowShape, squareCenter } from '../src/core/arrow-geometry';
+import { translateMsg } from '../src/core/i18n';
 
 const board = new BoardService();
 
@@ -57,7 +58,8 @@ describe('drill progress persistence', () => {
     expect(s.status).toBe('playing');
     expect(s.line).toEqual(['d2d4', 'g8f6']);
     expect(s.fen).toBe(board.applyUci(board.applyUci(START_FEN, 'd2d4')!.fen, 'g8f6')!.fen);
-    expect(s.message?.text).toContain('восстановлен');
+    expect(s.message?.key).toBe('drill.msg.restored');
+    expect(translateMsg('ru', s.message!)).toContain('восстановлен');
     expect(shown).toEqual([]); // nothing touches the board until the trainer is opened
 
     second.resume();

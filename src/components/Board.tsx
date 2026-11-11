@@ -6,6 +6,7 @@ import type { CandidateArrow, PvMark } from '../core/analysis.manager';
 import { arrowShape, pointsAttr, squareCenter } from '../core/arrow-geometry';
 import { textColorOn } from '../core/move-score';
 import { trackPieces, type TrackedPiece } from '../core/piece-tracking';
+import { useI18n } from '../hooks/useAnalysis';
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
 /** Slide duration for moves, ms. */
@@ -42,6 +43,7 @@ interface Drag {
  * teleporting it. A piece dropped by hand lands instantly; only other moves animate.
  */
 export function Board({ pieces, flipped, arrows, pvMarks, lastMove, targetsFrom, onMove }: BoardProps) {
+  const { t } = useI18n();
   const [selected, setSelected] = useState<Square | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const nextId = useRef(0);
@@ -149,7 +151,7 @@ export function Board({ pieces, flipped, arrows, pvMarks, lastMove, targetsFrom,
       className={`board${dragging ? ' dragging' : ''}`}
       viewBox="0 0 8 8"
       role="img"
-      aria-label="Шахматная доска"
+      aria-label={t('board.label')}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

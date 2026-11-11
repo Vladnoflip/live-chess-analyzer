@@ -4,12 +4,17 @@ import { THRESHOLDS } from './classification';
 import { formatScore } from './format';
 import { MATED_CP, type Color, type Score } from './types';
 import type { BoardService } from '../services/board.service';
+import type { MessageKey, MessageParams, Msg } from './i18n';
 
 export type Tone = 'good' | 'bad' | 'info';
 
-export interface Explanation {
-  readonly text: string;
+/** One line of the explanation: a translatable message plus how to colour it. */
+export interface Explanation extends Msg {
   readonly tone: Tone;
+}
+
+function line(key: MessageKey, tone: Tone, params?: MessageParams): Explanation {
+  return params ? { key, params, tone } : { key, tone };
 }
 
 export interface OpeningContext {
@@ -64,28 +69,36 @@ export function explainMove(input: ExplainInput, board: BoardService): Explanati
   if (opening) {
     out.push(
       opening.inBook
-        ? { text: `Дебютный ход теории: ${opening.name} (${opening.eco}), ${opening.moveNumber}-й ход теории`, tone: 'good' }
-        : { text: `Вне теории (дебют: ${opening.name}, ${opening.eco})`, tone: 'info' },
+        ? line('ex.bookMove', 'good', { name: opening.name, eco: opening.eco, n: opening.moveNumber })
+        : line('ex.outOfBook', 'info', { name: opening.name, eco: opening.eco }),
     );
   }
 
   // Verdict.
   if (cand?.brilliant) {
-    out.push({ text: `Блестящий ход: жертва материала (~${pawns(tactics?.sacrificed ?? 0)}), а оценка сохраняется`, tone: 'good' });
+    out.push(line('ex.brilliant', 'good', { pawns: pawns(tactics?.sacrificed ?? 0) }));
   }
   if (cand?.rank === 1) {
     const second = candidates[1];
     if (second && second.delta > EXPLAIN.onlyMoveDelta) {
-      out.push({ text: `Единственный ход: следующий вариант (${second.sanMove}) теряет ${Math.round(second.delta)} п.п. шансов`, tone: 'good' });
+      out.push(line('ex.onlyMove', 'good', { san: second.sanMove, delta: Math.round(second.delta) }));
     } else {
-      out.push({ text: 'Лучший ход', tone: 'good' });
+      out.push(line('ex.best', 'good'));
     }
   } else if (score !== null && delta !== null && best) {
     // Labels follow the classification thresholds (win-% loss), not the score curve.
-    const label =
-      delta < 2 ? 'Почти не уступает лучшему' : delta < THRESHOLDS.inaccuracy ? 'Хороший ход' : delta < THRESHOLDS.mistake ? 'Неточность' : delta < THRESHOLDS.blunder ? 'Ошибка' : 'Зевок';
+    const key: MessageKey =
+      delta < 2
+        ? 'ex.verdict.nearBest'
+        : delta < THRESHOLDS.inaccuracy
+          ? 'ex.verdict.good'
+          : delta < THRESHOLDS.mistake
+            ? 'ex.verdict.inaccuracy'
+            : delta < THRESHOLDS.blunder
+              ? 'ex.verdict.mistake'
+              : 'ex.verdict.blunder';
     const tone: Tone = delta < 2 ? 'good' : delta < THRESHOLDS.inaccuracy ? 'info' : 'bad';
-    out.push({ text: `${label} (${score}/100), лучше ${best.sanMove}`, tone });
+    out.push(line(key, tone, { score, best: best.sanMove }));
   }
 
   // Mates.
@@ -93,10 +106,10 @@ export function explainMove(input: ExplainInput, board: BoardService): Explanati
     const bestMate = mateFor(mover, best.score);
     const afterMate = mateFor(mover, after);
     if (bestMate !== null && bestMate > 0 && (afterMate === null || afterMate <= 0) && cand?.rank !== 1) {
-      out.push({ text: `Упускает мат в ${bestMate}`, tone: 'bad' });
+      out.push(line('ex.missesMate', 'bad', { n: bestMate }));
     }
     if (afterMate !== null && afterMate < 0) {
-      out.push({ text: `Позволяет мат в ${-afterMate}`, tone: 'bad' });
+      out.push(line('ex.allowsMate', 'bad', { n: -afterMate }));
     }
   }
 
@@ -104,10 +117,10 @@ export function explainMove(input: ExplainInput, board: BoardService): Explanati
 
   // Material.
   if (tactics && !cand?.brilliant && !quiet) {
-    if (tactics.sacrificed >= EXPLAIN.pieceLoss) out.push({ text: `Теряет фигуру (~${pawns(tactics.sacrificed)})`, tone: 'bad' });
-    else if (tactics.sacrificed >= EXPLAIN.pawnLoss) out.push({ text: 'Теряет пешку', tone: 'bad' });
+    if (tactics.sacrificed >= EXPLAIN.pieceLoss) out.push(line('ex.losesPiece', 'bad', { pawns: pawns(tactics.sacrificed) }));
+    else if (tactics.sacrificed >= EXPLAIN.pawnLoss) out.push(line('ex.losesPawn', 'bad'));
   } else if (tactics && tactics.sacrificed >= EXPLAIN.pieceLoss && !cand?.brilliant && quiet) {
-    out.push({ text: `Жертва материала (~${pawns(tactics.sacrificed)}) с сохранением оценки`, tone: 'good' });
+    out.push(line('ex.sacrifice', 'good', { pawns: pawns(tactics.sacrificed) }));
   }
 
   const applied = board.applyUci(fen, uci);
@@ -116,19 +129,19 @@ export function explainMove(input: ExplainInput, board: BoardService): Explanati
     const before = board.kingSafety(fen, mover).zoneAttacks;
     const afterZone = board.kingSafety(applied.fen, mover).zoneAttacks;
     if (afterZone - before >= EXPLAIN.kingZoneIncrease) {
-      out.push({ text: `Ослабляет короля: атак на зону короля ${before} → ${afterZone}`, tone: 'bad' });
+      out.push(line('ex.weakensKing', 'bad', { before, after: afterZone }));
     }
     // Mobility of the moved piece.
     const piece = san[0];
     if (piece && 'NBRQ'.includes(piece)) {
       const mob = board.pieceMobility(fen, uci);
       if (mob && mob.pieceBefore - mob.pieceAfter >= EXPLAIN.mobilityDrop) {
-        out.push({ text: `Уводит фигуру с активной позиции (ходов ${mob.pieceBefore} → ${mob.pieceAfter})`, tone: 'info' });
+        out.push(line('ex.passivePiece', 'info', { before: mob.pieceBefore, after: mob.pieceAfter }));
       }
     }
   }
 
-  if (after) out.push({ text: `Оценка после хода: ${formatScore(after)}`, tone: 'info' });
+  if (after) out.push(line('ex.evalAfter', 'info', { score: formatScore(after) }));
   return out;
 }
 
@@ -140,6 +153,7 @@ function mateFor(mover: Color, score: Score): number | null {
   return null;
 }
 
+/** Centipawns as pawns with one decimal; the unit word lives in the message. */
 function pawns(cp: number): string {
-  return `${(cp / 100).toFixed(1)} пешки`;
+  return (cp / 100).toFixed(1);
 }

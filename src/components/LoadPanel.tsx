@@ -1,9 +1,11 @@
 import { useRef, useState, type ChangeEvent } from 'react';
+import type { Msg } from '../core/i18n';
+import { useI18n } from '../hooks/useAnalysis';
 
 export interface LoadPanelProps {
   fenInput: string;
-  fenError: string | null;
-  pgnError: string | null;
+  fenError: Msg | null;
+  pgnError: Msg | null;
   liveMode: boolean;
   onFenChange(text: string): void;
   onFenSubmit(): void;
@@ -12,25 +14,26 @@ export interface LoadPanelProps {
 }
 
 export function LoadPanel(props: LoadPanelProps) {
+  const { t, text } = useI18n();
   const [pgnText, setPgnText] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const text = await file.text();
-    setPgnText(text);
-    props.onPgnLoad(text);
+    const content = await file.text();
+    setPgnText(content);
+    props.onPgnLoad(content);
     e.target.value = '';
   };
 
   return (
     <section className="panel load-panel">
       <header className="panel-head">
-        <span>Позиция (FEN)</span>
-        <label className="toggle" title="Пересчитывать при каждом изменении FEN">
+        <span>{t('load.fen')}</span>
+        <label className="toggle" title={t('load.liveHint')}>
           <input type="checkbox" checked={props.liveMode} onChange={(e) => props.onLiveModeChange(e.target.checked)} />
-          Live mode
+          {t('load.liveMode')}
         </label>
       </header>
       <textarea
@@ -47,33 +50,33 @@ export function LoadPanel(props: LoadPanelProps) {
         }}
       />
       <div className="row">
-        {props.fenError ? <span className="error">{props.fenError}</span> : <span className="muted small-text">Enter — анализировать</span>}
+        {props.fenError ? <span className="error">{text(props.fenError)}</span> : <span className="muted small-text">{t('load.enterHint')}</span>}
         {!props.liveMode && (
           <button className="small" onClick={props.onFenSubmit}>
-            Анализ
+            {t('load.analyse')}
           </button>
         )}
       </div>
 
       <header className="panel-head">
-        <span>Партия (PGN)</span>
+        <span>{t('load.pgn')}</span>
         <button className="small" onClick={() => fileRef.current?.click()}>
-          Открыть файл…
+          {t('load.openFile')}
         </button>
         <input ref={fileRef} type="file" accept=".pgn,text/plain" hidden onChange={onFile} />
       </header>
       <textarea
         className="pgn-input"
         value={pgnText}
-        placeholder="Вставьте PGN сюда"
+        placeholder={t('load.pgnPlaceholder')}
         spellCheck={false}
         rows={4}
         onChange={(e) => setPgnText(e.target.value)}
       />
       <div className="row">
-        {props.pgnError ? <span className="error">{props.pgnError}</span> : <span />}
+        {props.pgnError ? <span className="error">{text(props.pgnError)}</span> : <span />}
         <button className="small" disabled={!pgnText.trim()} onClick={() => props.onPgnLoad(pgnText)}>
-          Загрузить PGN
+          {t('load.loadPgn')}
         </button>
       </div>
     </section>

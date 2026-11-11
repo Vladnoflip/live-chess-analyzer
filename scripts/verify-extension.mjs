@@ -76,6 +76,29 @@ try {
   const swTarget = await browser.waitForTarget((t) => t.type() === 'service_worker' && t.url().startsWith('chrome-extension://'));
   const sw = await swTarget.worker();
   check('service worker started', !!sw);
+  const extId = new URL(swTarget.url()).host;
+  // Right after start-up the worker may not expose chrome.storage yet.
+  for (let i = 0; i < 50 && !(await sw.evaluate(() => typeof chrome !== 'undefined' && !!chrome.storage)); i++) await sleep(100);
+  const setSetting = (patch) =>
+    sw.evaluate(async (patch) => {
+      const { settings } = await chrome.storage.sync.get('settings');
+      await chrome.storage.sync.set({ settings: { ...(settings ?? {}), ...patch } });
+    }, patch);
+  // Run the suite with the English UI regardless of the machine's language.
+  await setSetting({ locale: 'en' });
+
+  // Popup is localized from the dictionaries (data-i18n), in both languages.
+  const popup = await browser.newPage();
+  await popup.goto(`chrome-extension://${extId}/extension/popup.html`);
+  await popup.waitForFunction(() => document.querySelector('#openTrainer')?.textContent?.length > 0);
+  const popupEn = await popup.evaluate(() => ({ trainer: document.querySelector('#openTrainer').textContent, lang: document.documentElement.lang }));
+  check('popup: English texts', popupEn.trainer === 'Open the opening trainer ↗' && popupEn.lang === 'en', JSON.stringify(popupEn));
+  await popup.select('#locale', 'ru');
+  const popupRu = await popup.evaluate(() => ({ trainer: document.querySelector('#openTrainer').textContent, lang: document.documentElement.lang }));
+  check('popup: switching to Russian applies immediately', popupRu.trainer === 'Открыть тренажёр дебютов ↗' && popupRu.lang === 'ru', JSON.stringify(popupRu));
+  await popup.select('#locale', 'en');
+  await sleep(200);
+  await popup.close();
 
   const tab = await browser.newPage();
   await tab.setRequestInterception(true);
@@ -192,14 +215,13 @@ try {
   check('font setting applied to the overlay', s.font.includes('Georgia'), s.font);
 
   // 9. Trainer site inside the extension.
-  const extId = new URL(swTarget.url()).host;
   const trainer = await browser.newPage();
   await trainer.goto(`chrome-extension://${extId}/extension/trainer.html`);
-  await trainer.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent === 'Начать тренировку'), { timeout: 15000 });
+  await trainer.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent === 'Start training'), { timeout: 15000 });
   await trainer.evaluate(() => {
-    [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('Индийские защиты'))?.click();
+    [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('Indian defences'))?.click();
   });
-  await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Начать тренировку')?.click());
+  await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Start training')?.click());
   await trainer.waitForFunction(() => document.querySelector('.move-strip')?.textContent?.includes('d4'), { timeout: 10000 });
   const pieces = await trainer.evaluate(() => document.querySelectorAll('image.piece').length);
   check('trainer: board with cburnett pieces, book move played for White', pieces === 32, `${pieces} pieces`);
@@ -237,7 +259,9 @@ try {
     text: document.querySelector('.feedback-text')?.textContent,
     errors: document.querySelector('.stats .bad')?.textContent,
   }));
-  check('trainer: progress restored after reload', restored.text?.includes('восстановлен') && restored.errors === '1', JSON.stringify(restored));
+  const trainerCyrillic = await trainer.evaluate(() => /[А-Яа-яЁё]/.test(document.body.innerText));
+  check('trainer: English UI has no Russian text', !trainerCyrillic);
+  check('trainer: progress restored after reload', restored.text?.includes('Progress restored') && restored.errors === '1', JSON.stringify(restored));
   await trainer.close();
 
   // 7. chess.com live game against a person: nothing.

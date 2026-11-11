@@ -1,3 +1,5 @@
+import { isLocalePref, type LocalePref, type MessageKey } from '../../src/core/i18n';
+
 export interface ExtensionSettings {
   readonly enabled: boolean;
   readonly showArrow: boolean;
@@ -18,16 +20,18 @@ export interface ExtensionSettings {
   readonly fontFamily: FontId;
   /** Text size multiplier for the overlay panel and labels. */
   readonly fontScale: number;
+  /** UI language of the popup and the trainer page; 'auto' follows the browser. */
+  readonly locale: LocalePref;
 }
 
 export type FontId = 'system' | 'humanist' | 'rounded' | 'serif' | 'mono';
 
-export const FONTS: Readonly<Record<FontId, { readonly label: string; readonly stack: string }>> = {
-  system: { label: 'Системный', stack: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
-  humanist: { label: 'Гуманистический', stack: "'Segoe UI Variable', 'Gill Sans', 'Trebuchet MS', Calibri, sans-serif" },
-  rounded: { label: 'Округлый', stack: "ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', Nunito, 'Segoe UI', sans-serif" },
-  serif: { label: 'С засечками', stack: "Georgia, Cambria, 'Times New Roman', serif" },
-  mono: { label: 'Моноширинный', stack: "ui-monospace, Consolas, 'Cascadia Mono', Menlo, monospace" },
+export const FONTS: Readonly<Record<FontId, { readonly label: MessageKey; readonly stack: string }>> = {
+  system: { label: 'font.system', stack: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" },
+  humanist: { label: 'font.humanist', stack: "'Segoe UI Variable', 'Gill Sans', 'Trebuchet MS', Calibri, sans-serif" },
+  rounded: { label: 'font.rounded', stack: "ui-rounded, 'SF Pro Rounded', 'Arial Rounded MT Bold', Nunito, 'Segoe UI', sans-serif" },
+  serif: { label: 'font.serif', stack: "Georgia, Cambria, 'Times New Roman', serif" },
+  mono: { label: 'font.mono', stack: "ui-monospace, Consolas, 'Cascadia Mono', Menlo, monospace" },
 };
 
 export const DEFAULT_SETTINGS: ExtensionSettings = {
@@ -43,6 +47,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   showOpening: true,
   fontFamily: 'system',
   fontScale: 100,
+  locale: 'auto',
 };
 
 export const DEPTH_LIMITS = { min: 6, max: 24 } as const;
@@ -87,5 +92,6 @@ function sanitize(raw: unknown): ExtensionSettings {
     showOpening: bool('showOpening'),
     fontFamily: typeof src.fontFamily === 'string' && src.fontFamily in FONTS ? (src.fontFamily as FontId) : DEFAULT_SETTINGS.fontFamily,
     fontScale: num('fontScale', 80, 150),
+    locale: isLocalePref(src.locale) ? src.locale : DEFAULT_SETTINGS.locale,
   };
 }

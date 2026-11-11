@@ -785,3 +785,14 @@ textarea.invalid {
 .moves-panel .move-scroll {
   position: relative; /* offsetTop of moves is measured from here */
 }
+
+/* ── language switch ── */
+.language-select {
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 6px;
+}

@@ -1,6 +1,7 @@
 import type { Candidate } from '../core/candidates';
 import type { Explanation } from '../core/move-explainer';
 import { formatScore } from '../core/format';
+import { useI18n } from '../hooks/useAnalysis';
 
 export interface VariantsPanelProps {
   candidates: readonly Candidate[];
@@ -11,14 +12,15 @@ export interface VariantsPanelProps {
 }
 
 export function VariantsPanel({ candidates, selectedRank, explanation, explanationTitle, onSelect }: VariantsPanelProps) {
+  const { t, text } = useI18n();
   return (
     <section className="panel variants-panel">
       <header className="panel-head">
-        <span>Варианты</span>
-        <span className="muted small-text">клик — показать на доске</span>
+        <span>{t('variants.title')}</span>
+        <span className="muted small-text">{t('variants.hint')}</span>
       </header>
       {candidates.length === 0 ? (
-        <p className="muted small-text">Ожидание движка…</p>
+        <p className="muted small-text">{t('variants.waiting')}</p>
       ) : (
         <ol className="variants">
           {candidates.map((c) => (
@@ -52,7 +54,7 @@ export function VariantsPanel({ candidates, selectedRank, explanation, explanati
           <ul>
             {explanation.map((e, i) => (
               <li key={i} className={`tone-${e.tone}`}>
-                {e.text}
+                {text(e)}
               </li>
             ))}
           </ul>

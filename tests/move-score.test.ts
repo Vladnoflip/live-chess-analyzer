@@ -7,6 +7,7 @@ import { explainMove } from '../src/core/move-explainer';
 import { parseUciLine, toWhitePov } from '../src/services/uci.parser';
 import { boardService } from '../src/services/board.service';
 import type { Score, SearchInfo } from '../src/core/types';
+import { translateMsg, type Msg } from '../src/core/i18n';
 
 const cp = (value: number): Score => ({ kind: 'cp', value });
 const mate = (value: number): Score => ({ kind: 'mate', value });
@@ -170,13 +171,17 @@ describe('brilliant flag', () => {
 
 describe('explainMove', () => {
   const line = (rank: number, uci: string, score: Score): SearchInfo => ({ depth: 16, multiPv: rank, score, pv: [uci] });
-  const texts = (xs: readonly { text: string }[]) => xs.map((x) => x.text).join(' | ');
+  // Explanations are messages; assert on the Russian rendering (and English where noted).
+  const ru = (m: Msg) => translateMsg('ru', m);
+  const texts = (xs: readonly Msg[]) => xs.map(ru).join(' | ');
 
   it('marks a best move with a large gap as the only move', () => {
     const fen = '6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1';
     const cands = buildCandidates(fen, [line(1, 'd1d8', mate(1)), line(2, 'g2g3', cp(0))], boardService);
     const ex = explainMove({ fen, uci: 'd1d8', candidates: cands }, boardService);
-    expect(ex[0]).toEqual({ text: expect.stringContaining('Единственный ход'), tone: 'good' });
+    expect(ex[0]).toMatchObject({ key: 'ex.onlyMove', tone: 'good' });
+    expect(ru(ex[0]!)).toContain('Единственный ход');
+    expect(translateMsg('en', ex[0]!)).toBe('Only move: the next variation (g3) loses 50 pp of winning chances');
   });
 
   it('reports a missed mate', () => {
@@ -184,7 +189,7 @@ describe('explainMove', () => {
     const cands = buildCandidates(fen, [line(1, 'd1d8', mate(1)), line(2, 'g2g3', cp(0))], boardService);
     const ex = explainMove({ fen, uci: 'g2g3', candidates: cands }, boardService);
     expect(texts(ex)).toContain('Упускает мат в 1');
-    expect(ex.find((e) => e.text.startsWith('Зевок'))?.tone).toBe('bad');
+    expect(ex.find((e) => ru(e).startsWith('Зевок'))?.tone).toBe('bad');
   });
 
   it('explains the Legal sacrifice as brilliant', () => {
@@ -220,6 +225,8 @@ describe('explainMove', () => {
       { fen, uci: 'g8f6', candidates: [], opening: { name: 'Indian Defense', eco: 'A45', inBook: true, moveNumber: 1 } },
       boardService,
     );
-    expect(ex[0]).toEqual({ text: 'Дебютный ход теории: Indian Defense (A45), 1-й ход теории', tone: 'good' });
+    expect(ex[0]).toEqual({ key: 'ex.bookMove', params: { name: 'Indian Defense', eco: 'A45', n: 1 }, tone: 'good' });
+    expect(ru(ex[0]!)).toBe('Дебютный ход теории: Indian Defense (A45), 1-й ход теории');
+    expect(translateMsg('en', ex[0]!)).toBe('Book move: Indian Defense (A45), theory move 1');
   });
 });

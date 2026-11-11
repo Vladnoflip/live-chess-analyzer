@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Square } from 'chess.js';
-import { useAnalysis, useDrill, useExplorer, useServices } from '../../src/hooks/useAnalysis';
+import { useAnalysis, useDrill, useExplorer, useI18n, useServices } from '../../src/hooks/useAnalysis';
 import { Board } from '../../src/components/Board';
 import { DRILL_SECTIONS, type DrillState, type SectionTotals } from '../../src/core/drill.manager';
 import { formatScore } from '../../src/core/format';
 import { textColorOn } from '../../src/core/move-score';
 import type { Candidate } from '../../src/core/candidates';
 import type { Color } from '../../src/core/types';
+import type { MessageKey } from '../../src/core/i18n';
 import { SoundControls } from '../../src/components/SoundControls';
 
 /** Short descriptions for the section cards. */
-const ABOUT: Record<string, { readonly blurb: string; readonly eco: string; readonly icon: string }> = {
-  all: { blurb: 'Все дебюты книги вперемешку', eco: 'A00–E99', icon: '♞' },
-  indian: { blurb: 'Нимцович, староиндийская, новоиндийская, Боголюбов', eco: 'A45–E99', icon: '♝' },
-  gambits: { blurb: 'Ферзевый, королевский, Эванса, Муцио и другие', eco: 'разные', icon: '♟' },
-  sicilian: { blurb: 'Найдорф, дракон, Свешников, Тайманов', eco: 'B20–B99', icon: '♛' },
-  french: { blurb: 'Винавер, Тарраш, классическая система', eco: 'C00–C19', icon: '♜' },
-  caro: { blurb: 'Классическая, атака Панова, система с продвижением', eco: 'B10–B19', icon: '♚' },
-  slav: { blurb: 'Славянская и полуславянская защита', eco: 'D10–D19, D43–D49', icon: '♞' },
+const ABOUT: Record<string, { readonly blurb: MessageKey; readonly eco: string | null; readonly icon: string }> = {
+  all: { blurb: 'section.all.blurb', eco: 'A00–E99', icon: '♞' },
+  indian: { blurb: 'section.indian.blurb', eco: 'A45–E99', icon: '♝' },
+  gambits: { blurb: 'section.gambits.blurb', eco: null, icon: '♟' },
+  sicilian: { blurb: 'section.sicilian.blurb', eco: 'B20–B99', icon: '♛' },
+  french: { blurb: 'section.french.blurb', eco: 'C00–C19', icon: '♜' },
+  caro: { blurb: 'section.caro.blurb', eco: 'B10–B19', icon: '♚' },
+  slav: { blurb: 'section.slav.blurb', eco: 'D10–D19, D43–D49', icon: '♞' },
 };
 
 export function TrainerApp() {
@@ -26,6 +27,12 @@ export function TrainerApp() {
   const drillState = useDrill();
   const explorerState = useExplorer();
   const bookReady = explorerState.status === 'ready';
+  const { t, locale } = useI18n();
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+    document.title = t('trainer.pageTitle');
+  }, [locale]);
 
   // Continue a saved line as soon as the book is available.
   useEffect(() => {
@@ -50,15 +57,15 @@ export function TrainerApp() {
             ♘
           </span>
           <div>
-            <h1>Тренажёр дебютов</h1>
-            <p>LiveChess Analyzer · всё считается на вашем компьютере</p>
+            <h1>{t('trainer.title')}</h1>
+            <p>{t('trainer.subtitle')}</p>
           </div>
         </div>
         <div className="head-actions">
           <SoundControls compact />
           {drillState.status !== 'idle' && (
             <button className="ghost" onClick={() => drill.stop()}>
-              ← К разделам
+              {t('trainer.backToSections')}
             </button>
           )}
         </div>
@@ -69,7 +76,7 @@ export function TrainerApp() {
       ) : (
         <main className="t-play">
           <div className="t-board-card">
-            <div className="t-opening">{drillState.openingName ?? 'Начальная позиция'}</div>
+            <div className="t-opening">{drillState.openingName ?? t('trainer.startingPosition')}</div>
             <div className="t-board">
               <Board
                 pieces={pieces}
@@ -108,14 +115,15 @@ function SectionPicker({
   const section = DRILL_SECTIONS.find((s) => s.id === selected) ?? DRILL_SECTIONS[0]!;
   const [color, setColor] = useState<Color>(section.defaultColor);
   const [maxMoves, setMaxMoves] = useState(state.maxMoves);
+  const { t } = useI18n();
 
   return (
     <main className="t-picker">
-      <h2>Что тренируем сегодня?</h2>
+      <h2>{t('trainer.question')}</h2>
       <div className="cards">
         {DRILL_SECTIONS.map((s) => {
           const about = ABOUT[s.id];
-          const t = state.totals[s.id];
+          const totals = state.totals[s.id];
           return (
             <button
               key={s.id}
@@ -128,11 +136,11 @@ function SectionPicker({
               <span className="card-icon" aria-hidden>
                 {about?.icon}
               </span>
-              <span className="card-title">{s.title}</span>
-              <span className="card-blurb">{about?.blurb}</span>
+              <span className="card-title">{t(s.title)}</span>
+              <span className="card-blurb">{about ? t(about.blurb) : ''}</span>
               <span className="card-meta">
-                <span>{about?.eco}</span>
-                {t && <Accuracy totals={t} />}
+                <span>{about ? (about.eco ?? t('section.ecoVarious')) : ''}</span>
+                {totals && <Accuracy totals={totals} />}
               </span>
             </button>
           );
@@ -140,20 +148,20 @@ function SectionPicker({
       </div>
 
       <div className="start-bar">
-        <div className="seg" role="group" aria-label="Цвет">
+        <div className="seg" role="group" aria-label={t('trainer.colour')}>
           <button className={color === 'w' ? 'on' : ''} onClick={() => setColor('w')}>
-            ♔ Белыми
+            {t('trainer.asWhite')}
           </button>
           <button className={color === 'b' ? 'on' : ''} onClick={() => setColor('b')}>
-            ♚ Чёрными
+            {t('trainer.asBlack')}
           </button>
         </div>
         <label className="moves-input">
-          Ходов в линии
+          {t('trainer.lineLength')}
           <input type="number" min={1} max={30} value={maxMoves} onChange={(e) => setMaxMoves(Number(e.target.value) || 10)} />
         </label>
         <button className="primary" disabled={!bookReady} onClick={() => onStart({ sectionId: selected, userColor: color, maxMoves })}>
-          {bookReady ? 'Начать тренировку' : 'Загружаем книгу дебютов…'}
+          {bookReady ? t('trainer.start') : t('trainer.loadingBook')}
         </button>
       </div>
     </main>
@@ -161,10 +169,11 @@ function SectionPicker({
 }
 
 function Accuracy({ totals }: { totals: SectionTotals }) {
+  const { t } = useI18n();
   if (totals.positions === 0) return null;
   const pct = Math.round((100 * totals.correct) / totals.positions);
   return (
-    <span className="acc" title={`Линий пройдено: ${totals.lines}, верно ${totals.correct}, ошибок ${totals.errors}`}>
+    <span className="acc" title={t('trainer.accuracyTitle', { lines: totals.lines, correct: totals.correct, errors: totals.errors })}>
       <span className="ring" style={{ background: `conic-gradient(var(--good) ${pct * 3.6}deg, var(--track) 0)` }} />
       {pct}%
     </span>
@@ -172,10 +181,11 @@ function Accuracy({ totals }: { totals: SectionTotals }) {
 }
 
 function Feedback({ state, onReveal, onRestart }: { state: DrillState; onReveal(): void; onRestart(): void }) {
+  const { t, text } = useI18n();
   const tone = state.message?.tone ?? 'info';
   return (
     <section className={`t-card feedback tone-${tone}`}>
-      <div className="feedback-text">{state.message?.text ?? 'Ваш ход'}</div>
+      <div className="feedback-text">{state.message ? text(state.message) : t('trainer.yourMove')}</div>
       {state.expected.length > 0 && (
         <div className="chips">
           {state.expected.map((san) => (
@@ -188,23 +198,24 @@ function Feedback({ state, onReveal, onRestart }: { state: DrillState; onReveal(
       <div className="actions">
         {state.status === 'playing' && state.expected.length > 0 && (
           <button className="soft" onClick={onReveal}>
-            Показать ход теории
+            {t('drill.reveal')}
           </button>
         )}
         <button className={state.status === 'finished' ? 'primary' : 'soft'} onClick={onRestart}>
-          {state.status === 'finished' ? 'Ещё линию' : 'Начать заново'}
+          {state.status === 'finished' ? t('trainer.another') : t('trainer.restart')}
         </button>
       </div>
       <p className="hint">
         {state.status === 'playing'
-          ? `Вы играете ${state.userColor === 'w' ? 'белыми' : 'чёрными'}. Подсказки движка появятся после ошибки.`
-          : 'Линия завершена. Прогресс сохранён.'}
+          ? t(state.userColor === 'w' ? 'drill.youPlayWhite' : 'drill.youPlayBlack')
+          : t('trainer.finished')}
       </p>
     </section>
   );
 }
 
 function Progress({ state }: { state: DrillState }) {
+  const { t } = useI18n();
   const { stats } = state;
   const total = state.totals[state.sectionId];
   const section = DRILL_SECTIONS.find((s) => s.id === state.sectionId);
@@ -212,9 +223,9 @@ function Progress({ state }: { state: DrillState }) {
   return (
     <section className="t-card progress">
       <div className="progress-head">
-        <span>{section?.title}</span>
+        <span>{section ? t(section.title) : ''}</span>
         <span className="muted">
-          ход {Math.ceil(state.line.length / 2)} из {state.maxMoves}
+          {t('trainer.moveOf', { n: Math.ceil(state.line.length / 2), max: state.maxMoves })}
         </span>
       </div>
       <div className="bar">
@@ -222,19 +233,19 @@ function Progress({ state }: { state: DrillState }) {
       </div>
       <dl className="stats">
         <div>
-          <dt>Верно</dt>
+          <dt>{t('trainer.correct')}</dt>
           <dd className="good">{stats.correct}</dd>
         </div>
         <div>
-          <dt>Ошибок</dt>
+          <dt>{t('trainer.errors')}</dt>
           <dd className="bad">{stats.errors}</dd>
         </div>
         <div>
-          <dt>Точность</dt>
+          <dt>{t('trainer.accuracy')}</dt>
           <dd>{pct}%</dd>
         </div>
         <div>
-          <dt>Линий всего</dt>
+          <dt>{t('trainer.linesTotal')}</dt>
           <dd>{total?.lines ?? 0}</dd>
         </div>
       </dl>
@@ -243,11 +254,12 @@ function Progress({ state }: { state: DrillState }) {
 }
 
 function Hints({ candidates, searching }: { candidates: readonly Candidate[]; searching: boolean }) {
+  const { t } = useI18n();
   return (
     <section className="t-card hints">
       <div className="progress-head">
-        <span>Подсказка движка</span>
-        {searching && <span className="muted">считает…</span>}
+        <span>{t('trainer.hints')}</span>
+        {searching && <span className="muted">{t('trainer.thinking')}</span>}
       </div>
       <ul>
         {candidates.map((c) => (
@@ -266,7 +278,8 @@ function Hints({ candidates, searching }: { candidates: readonly Candidate[]; se
 }
 
 function MoveStrip({ san }: { san: readonly string[] }) {
-  if (san.length === 0) return <div className="move-strip muted">Ходов пока нет</div>;
+  const { t } = useI18n();
+  if (san.length === 0) return <div className="move-strip muted">{t('trainer.noMoves')}</div>;
   return (
     <div className="move-strip">
       {san.map((m, i) => (

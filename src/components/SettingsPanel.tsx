@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { AppSettings } from '../core/analysis.manager';
 import { SoundControls } from './SoundControls';
+import { useI18n } from '../hooks/useAnalysis';
+import { isLocalePref } from '../core/i18n';
 
 interface SliderProps {
   label: string;
@@ -54,15 +56,30 @@ export interface SettingsPanelProps {
 }
 
 export function SettingsPanel({ settings, maxThreads, multiThreaded, onChange }: SettingsPanelProps) {
+  const { t, pref, setPref } = useI18n();
   return (
     <section className="panel settings-panel">
       <header className="panel-head">
-        <span>Настройки движка</span>
+        <span>{t('settings.title')}</span>
       </header>
+      <label className="segmented-row language-row">
+        <span className="slider-label">{t('settings.language')}</span>
+        <select
+          className="language-select"
+          value={pref}
+          onChange={(e) => {
+            if (isLocalePref(e.target.value)) setPref(e.target.value);
+          }}
+        >
+          <option value="auto">{t('lang.auto')}</option>
+          <option value="en">{t('lang.en')}</option>
+          <option value="ru">{t('lang.ru')}</option>
+        </select>
+      </label>
       <SoundControls />
       <div className="segmented-row">
-        <span className="slider-label">Варианты</span>
-        <div className="segmented" role="group" aria-label="Количество вариантов">
+        <span className="slider-label">{t('settings.variants')}</span>
+        <div className="segmented" role="group" aria-label={t('settings.variantsLabel')}>
           {[1, 3, 5].map((n) => (
             <button key={n} className={settings.multiPv === n ? 'active' : ''} onClick={() => onChange({ multiPv: n })}>
               {n}
@@ -70,25 +87,25 @@ export function SettingsPanel({ settings, maxThreads, multiThreaded, onChange }:
           ))}
         </div>
       </div>
-      <Slider label="Глубина" value={settings.depth} min={6} max={30} onCommit={(depth) => onChange({ depth })} />
+      <Slider label={t('settings.depth')} value={settings.depth} min={6} max={30} onCommit={(depth) => onChange({ depth })} />
       <Slider
-        label="Глубина разбора партии"
+        label={t('settings.reviewDepth')}
         value={settings.reviewDepth}
         min={6}
         max={22}
         onCommit={(reviewDepth) => onChange({ reviewDepth })}
       />
       <Slider
-        label="Потоки CPU"
+        label={t('settings.threads')}
         value={settings.threads}
         min={1}
         max={Math.max(1, maxThreads)}
         disabled={!multiThreaded}
-        hint={multiThreaded ? undefined : 'Страница не cross-origin isolated — доступен только однопоточный движок'}
+        hint={multiThreaded ? undefined : t('settings.singleThreadHint')}
         onCommit={(threads) => onChange({ threads })}
       />
-      <Slider label="Хеш" value={settings.hashMb} min={16} max={512} step={16} unit=" МБ" onCommit={(hashMb) => onChange({ hashMb })} />
-      {!multiThreaded && <p className="muted small-text">Однопоточный режим: нет SharedArrayBuffer (нужны заголовки COOP/COEP).</p>}
+      <Slider label={t('settings.hash')} value={settings.hashMb} min={16} max={512} step={16} unit={t('settings.mb')} onCommit={(hashMb) => onChange({ hashMb })} />
+      {!multiThreaded && <p className="muted small-text">{t('settings.singleThreadNote')}</p>}
     </section>
   );
 }

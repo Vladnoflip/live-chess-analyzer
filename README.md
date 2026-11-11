@@ -7,7 +7,7 @@ Local chess analysis with Stockfish 18 (WASM): a MultiPV analyzer with 0–100 m
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](tsconfig.json)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4.svg?logo=googlechrome&logoColor=white)](extension/manifest.ts)
 
-Everything runs on your machine. The engine is Stockfish compiled to WebAssembly and runs in a Web Worker; there is no server and no network traffic. The user interface is in Russian; code, comments and documentation are in English.
+Everything runs on your machine. The engine is Stockfish compiled to WebAssembly and runs in a Web Worker; there is no server and no network traffic. The interface is available in English and Russian.
 
 Repository: `https://github.com/Vladnoflip/live-chess-analyzer`
 
@@ -17,7 +17,7 @@ Repository: `https://github.com/Vladnoflip/live-chess-analyzer`
 
 ![Analyzer with MultiPV arrows and score badges](docs/screenshots/analyzer.png)
 
-**Variants panel.** MultiPV 5 in Morphy's Opera Game before 12.O-O-O: the score bars use the colour steps (dark green 100, orange 37, red 23 / 16 / 9).
+**Variants panel.** MultiPV 5 in Morphy's Opera Game before 12.O-O-O: the score bars use the colour steps (dark green 100, orange 44 / 27, red 17 / 10).
 
 ![Variants panel with coloured score bars](docs/screenshots/variants-panel.png)
 
@@ -65,28 +65,31 @@ The trainer exists in two builds that share the same code (`src/core/drill.manag
 
 | Build | Trainer entry point | Progress storage |
 |---|---|---|
-| Web app (`dist/`) | *Тренажёр* mode inside `index.html` (there is no separate `trainer.html`) | `localStorage` of the site's origin, e.g. `http://localhost:5173` or the GitHub Pages URL |
+| Web app (`dist/`) | *Trainer* mode inside `index.html` (there is no separate `trainer.html`) | `localStorage` of the site's origin, e.g. `http://localhost:5173` or the GitHub Pages URL |
 | Extension (`dist-extension/`) | `extension/trainer.html`, opened from the popup | `localStorage` of `chrome-extension://<extension id>` |
 
 **Progress is not synchronized between the web app and the extension.** Browsers isolate `localStorage` per origin, so each build keeps its own line and statistics. The same applies to different web origins: the dev server, `npm run preview` and GitHub Pages each have their own progress. Sharing progress would need either a server or extra extension permissions on the web app's origin, and the project deliberately has neither: there are no network requests and only the chess.com and lichess.org host permissions.
 
-The extension's own settings (overlay, depth, font, etc.) are a separate store in `chrome.storage.sync`. The trainer page reads the font setting from there.
+The extension's own settings (overlay, depth, font, language, etc.) are a separate store in `chrome.storage.sync`. The trainer page reads the font and language settings from there. The web app keeps its language choice in `localStorage` (`livechess.locale.v1`).
+- **Bilingual UI: auto-detects system language (English/Russian) with manual override.** A Russian system language (`navigator.language`) gives the Russian UI; any other language gives English. You can override this under *Engine settings → Language* in the web app and in the extension popup (*Language*). All texts live in `src/locales/en.json` and `src/locales/ru.json`.
 - **Move sounds**, synthesized with Web Audio (no audio files).
-- **Chrome extension (Manifest V3).** Eval bar, candidate arrows with score badges, a variants panel, the opening indicator, a "hints only on my turn" option, a depth cap, and a font family and text size setting.
+- **Chrome extension (Manifest V3).** Eval bar, candidate arrows with score badges, a variants panel, the opening indicator, a "hints only on my turn" option, a depth cap, a font family and text size setting, and a language setting.
 
 ## Demo / How to use
 
 **Web app** (`npm run dev`, then open http://localhost:5173):
 
-1. **Анализ** (Analysis): paste a FEN or a PGN and watch the eval bar, the arrows and the variants panel. Click a variant to see its explanation. Press *Разобрать партию* (Review game) to score every move of a loaded game.
-2. **Дебюты** (Openings): walk the opening tree. Each book move shows its name and ECO code.
-3. **Тренажёр** (Trainer): pick a section and a colour, then play the book moves by dragging or clicking.
+1. **Analysis**: paste a FEN or a PGN and watch the eval bar, the arrows and the variants panel. Click a variant to see its explanation. Press *Review game* to score every move of a loaded game.
+2. **Openings**: walk the opening tree. Each book move shows its name and ECO code.
+3. **Trainer**: pick a section and a colour, then play the book moves by dragging or clicking.
+
+The UI language follows your system; change it under *Engine settings → Language*.
 
 **Extension:**
 
 1. Open the popup to choose the number of variants, the depth cap, the font, and other options.
 2. Open `chess.com/analysis`, `lichess.org/analysis` or a game against a chess.com bot. On any other page nothing happens.
-3. Click *Открыть тренажёр дебютов ↗* in the popup to open the trainer site.
+3. Click *Open the opening trainer ↗* in the popup to open the trainer site.
 
 ## Installation
 
@@ -125,9 +128,10 @@ src/
   services/         engine.service (UCI over a transport, MultiPV, cancellation), engine.transport (Web Worker),
                     uci.parser, board.service (chess.js wrapper: FEN, legal moves, SAN/UCI, PGN, SEE), sound.service
   core/             analysis.manager (state, cache, candidates, explanations), move-score, candidates,
-                    move-explainer, classification, openings, opening.explorer, drill.manager,
+                    move-explainer, classification, openings, opening.explorer, drill.manager, i18n,
                     arrow-geometry, piece-tracking, observable (Store / Emitter)
   components/       React UI only: Board, EvalBar, VariantsPanel, MoveList, DrillPanel, OpeningExplorerPanel, …
+  locales/          UI dictionaries: en.json and ru.json (same keys, checked by TypeScript and tests)
   data/openings/    lichess-org/chess-openings TSV files (CC0) and the generated openings.json
   assets/pieces/    cburnett SVG pieces (GPLv2+)
 extension/
@@ -206,7 +210,7 @@ The best move always scores 100. An inaccuracy (10–20 pp) lands between 55 and
 - **Engine strength.** The lite WASM builds are much weaker than native Stockfish, though far stronger than any human. The multi-threaded build needs COOP/COEP headers: the dev/preview servers and extension pages have them, but GitHub Pages does not, so the Pages deployment runs single-threaded.
 - **Trainer progress is per build and per origin.** The web app and the extension do not share it; see [Where trainer progress is stored](#where-trainer-progress-is-stored-not-synchronized).
 - **Promotion** by click or drag always promotes to a queen; under-promotions in loaded PGNs are handled correctly.
-- **Interface language** is Russian.
+- **Languages.** The UI is in English and Russian only. Opening names come from the lichess book and are always in English.
 
 ## Contributing
 

@@ -85,11 +85,11 @@ function parseHex(hex: string): [number, number, number] {
  * band it falls into rather than a blend. Brilliant moves are always blue.
  */
 export const ARROW_STEPS: readonly (readonly [minScore: number, hex: string, label: string])[] = [
-  [90, '#00a650', 'тёмно-зелёная'],
-  [75, '#2fe06f', 'зелёная'],
-  [50, '#ffd400', 'жёлтая'],
-  [25, '#ff8a00', 'оранжевая'],
-  [0, '#ff3b30', 'красная'],
+  [90, '#00a650', 'dark green'],
+  [75, '#2fe06f', 'green'],
+  [50, '#ffd400', 'yellow'],
+  [25, '#ff8a00', 'orange'],
+  [0, '#ff3b30', 'red'],
 ];
 
 export function scoreToStepColor(score: number, brilliant = false): string {

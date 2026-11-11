@@ -41,6 +41,7 @@ If a change affects the UI shown in the README, re-capture the images with `npm 
 - Business logic lives in framework-free modules (`src/services`, `src/core`) with unit tests. React components only render state read through `useSyncExternalStore` and call methods.
 - The app and the extension share `engine.service`, `board.service` and the scoring and opening modules. Keep them free of DOM and `chrome.*` APIs.
 - Write comments only where the logic is not obvious, in English.
+- UI text goes into both `src/locales/en.json` and `src/locales/ru.json` with the same key. Never hard-code UI strings in components. Core modules return `{ key, params }` messages, and components render them with `useI18n()`.
 - No network calls at runtime. Data such as the opening book is bundled.
 
 ## Pull requests

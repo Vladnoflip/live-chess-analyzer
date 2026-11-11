@@ -87,7 +87,7 @@ export class EngineService {
         });
       });
       this.transport.send('uci');
-      await withTimeout(name, INIT_TIMEOUT_MS, 'Stockfish не ответил на "uci"');
+      await withTimeout(name, INIT_TIMEOUT_MS, 'Stockfish did not answer "uci"');
       this.sendOptions(options);
       await this.isReady();
       return this.engineName;

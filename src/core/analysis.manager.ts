@@ -5,7 +5,8 @@ import { buildCandidates, isBrilliant, type Candidate } from './candidates';
 import { moveScore } from './move-score';
 import { explainMove, type Explanation, type OpeningContext } from './move-explainer';
 import { MATED_CP, type EngineSettings, type MoveClass, type Score, type SearchInfo, type SearchResult } from './types';
-import { BoardService, START_FEN, type BoardPiece, type GameMove } from '../services/board.service';
+import { BoardService, PgnParseError, START_FEN, type BoardPiece, type GameMove } from '../services/board.service';
+import { msg, type Msg } from './i18n';
 import { EngineService, MAX_MULTIPV, SearchCancelledError } from '../services/engine.service';
 
 export interface AppSettings extends EngineSettings {
@@ -80,8 +81,8 @@ export interface AnalysisState {
   readonly review: ReviewProgress | null;
 
   readonly fenInput: string;
-  readonly fenError: string | null;
-  readonly pgnError: string | null;
+  readonly fenError: Msg | null;
+  readonly pgnError: Msg | null;
   readonly liveMode: boolean;
 }
 
@@ -230,7 +231,8 @@ export class AnalysisManager extends Store<AnalysisState> {
       this.setState({ pgnError: null });
       return true;
     } catch (e) {
-      this.setState({ pgnError: e instanceof Error ? e.message : String(e) });
+      const detail = e instanceof PgnParseError ? e.detail : e instanceof Error ? e.message : String(e);
+      this.setState({ pgnError: msg('pgn.error', { detail }) });
       return false;
     }
   }

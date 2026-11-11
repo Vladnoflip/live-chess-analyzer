@@ -10,6 +10,7 @@ import { OpeningExplorer } from './core/opening.explorer';
 import { DrillManager } from './core/drill.manager';
 import { openingContext } from './core/openings';
 import { SoundService, bindSounds } from './services/sound.service';
+import { I18n } from './core/i18n';
 import './styles.css';
 
 const flavor = pickEngineFlavor();
@@ -32,6 +33,8 @@ const drill = new DrillManager({
 });
 
 const sound = new SoundService(safeLocalStorage());
+// UI language: navigator.language unless the user picked one in the settings.
+const i18n = new I18n(navigator.language, safeLocalStorage());
 bindSounds(sound, manager, drill);
 // Audio may only start after a user gesture; any click or key unlocks it.
 window.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
@@ -51,7 +54,7 @@ if (!root) throw new Error('#root not found');
 
 createRoot(root).render(
   <StrictMode>
-    <AnalysisContext.Provider value={{ manager, explorer, drill, sound }}>
+    <AnalysisContext.Provider value={{ manager, explorer, drill, sound, i18n }}>
       <App />
     </AnalysisContext.Provider>
   </StrictMode>,

@@ -3,6 +3,9 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { OpeningBook, normalizeQuery, parseBookData } from '../src/core/openings';
 import { DrillManager, DRILL_SECTIONS } from '../src/core/drill.manager';
 import { BoardService, START_FEN } from '../src/services/board.service';
+import { translateMsg, type Msg } from '../src/core/i18n';
+
+const ru = (m: Msg | null | undefined) => (m ? translateMsg('ru', m) : '');
 
 const board = new BoardService();
 
@@ -122,7 +125,9 @@ describe('DrillManager on a fixed tree', () => {
     expect(drill.isUserTurn()).toBe(true);
     expect(drill.tryMove('d2d4')).toBe(true);
     const s = drill.getState();
-    expect(s.message).toEqual({ tone: 'good', text: 'Верно: d4' });
+    expect(s.message).toEqual({ tone: 'good', key: 'drill.msg.correct', params: { san: 'd4' } });
+    expect(ru(s.message)).toBe('Верно: d4');
+    expect(translateMsg('en', s.message!)).toBe('Correct: d4');
     expect(s.line).toEqual(['d2d4', 'g8f6']); // only book reply in the section
     expect(s.stats).toEqual({ positions: 1, correct: 1, errors: 0 });
     expect(s.openingName).toBe('Indian Defense (A45)');
@@ -149,7 +154,8 @@ describe('DrillManager on a fixed tree', () => {
     expect(drill.tryMove('e2e4')).toBe(false);
     const s = drill.getState();
     expect(s.message?.tone).toBe('bad');
-    expect(s.message?.text).toContain('теория играет d4');
+    expect(ru(s.message)).toContain('теория играет d4');
+    expect(translateMsg('en', s.message!)).toBe('e4 is a book move, but it leaves the section. Theory here: d4');
     expect(s.expected).toEqual(['d4']);
     expect(s.stats.errors).toBe(1);
     expect(s.line).toEqual([]); // the wrong move is not played
@@ -161,7 +167,7 @@ describe('DrillManager on a fixed tree', () => {
     drill.start({ filter: { query: 'indian' }, userColor: 'w' });
     expect(drill.tryMove('e2e4')).toBe(false);
     // e4 IS in the whole book (King's Gambit line) but not in "indian".
-    expect(drill.getState().message?.text).toContain('за пределы раздела');
+    expect(ru(drill.getState().message)).toContain('за пределы раздела');
   });
 
   it('starts with the book move when the user plays Black', () => {
@@ -178,7 +184,7 @@ describe('DrillManager on a fixed tree', () => {
     const s = drill.getState();
     expect(s.line).toEqual(['e2e4', 'e7e5', 'f2f4']);
     expect(s.status).toBe('finished');
-    expect(s.message?.text).toContain("King's Gambit");
+    expect(ru(s.message)).toContain("King's Gambit");
   });
 
   it('finishes after maxMoves full moves', () => {
@@ -186,7 +192,8 @@ describe('DrillManager on a fixed tree', () => {
     drill.start({ userColor: 'w', maxMoves: 1 });
     drill.tryMove('d2d4');
     expect(drill.getState().status).toBe('finished');
-    expect(drill.getState().message?.text).toBe('Пройдено 1 ходов');
+    expect(ru(drill.getState().message)).toBe('Пройдено ходов: 1');
+    expect(translateMsg('en', drill.getState().message!)).toBe('Moves completed: 1');
   });
 });
 

@@ -43,7 +43,7 @@ describe('BoardService.validate', () => {
   it('rejects positions where the side not to move is in check', () => {
     // White to move, but the black king on e8 is attacked by the rook on e1.
     const r = board.validate('4k3/8/8/8/8/8/8/K3R3 w - - 0 1');
-    expect(r).toMatchObject({ ok: false, error: expect.stringContaining('шахом') });
+    expect(r).toMatchObject({ ok: false, error: { key: 'fen.sideNotToMoveInCheck' } });
   });
 
   it('accepts the side to move being in check', () => {

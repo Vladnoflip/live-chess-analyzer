@@ -237,7 +237,7 @@ export function parseBookData(raw: unknown): OpeningBookData {
     Array.isArray(d.positions) &&
     Array.isArray(d.entries) &&
     d.entries.every((e: unknown) => Array.isArray(e) && e.length === 5 && Array.isArray(e[4]));
-  if (!ok) throw new Error('Бандл дебютов повреждён: пересоберите его (npm run build-openings)');
+  if (!ok) throw new Error('The opening book bundle is corrupted: rebuild it with npm run build-openings');
   return raw as OpeningBookData;
 }
 

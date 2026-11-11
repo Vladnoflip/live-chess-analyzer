@@ -9,6 +9,7 @@ import { OpeningExplorer } from '../../src/core/opening.explorer';
 import { DrillManager } from '../../src/core/drill.manager';
 import { openingContext } from '../../src/core/openings';
 import { SoundService, bindSounds } from '../../src/services/sound.service';
+import { I18n } from '../../src/core/i18n';
 import { FONTS, loadSettings, onSettingsChanged, type ExtensionSettings } from '../shared/settings';
 import { TrainerApp } from './TrainerApp';
 import './trainer.css';
@@ -36,18 +37,21 @@ const drill = new DrillManager({
 });
 
 const sound = new SoundService(safeLocalStorage());
+// Language comes from the extension settings (popup); 'auto' follows navigator.language.
+const i18n = new I18n(navigator.language);
 bindSounds(sound, manager, drill);
 // Audio may only start after a user gesture; any click or key unlocks it.
 window.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
 window.addEventListener('keydown', () => sound.unlock(), { capture: true });
 
-function applyFont(s: ExtensionSettings): void {
+function applySettings(s: ExtensionSettings): void {
+  i18n.setPref(s.locale);
   const root = document.documentElement.style;
   root.setProperty('--font', FONTS[s.fontFamily].stack);
   root.setProperty('--font-scale', String(s.fontScale / 100));
 }
-void loadSettings().then(applyFont);
-onSettingsChanged(applyFont);
+void loadSettings().then(applySettings);
+onSettingsChanged(applySettings);
 
 function safeLocalStorage(): Storage | null {
   try {
@@ -61,7 +65,7 @@ const root = document.getElementById('root');
 if (!root) throw new Error('#root not found');
 createRoot(root).render(
   <StrictMode>
-    <AnalysisContext.Provider value={{ manager, explorer, drill, sound }}>
+    <AnalysisContext.Provider value={{ manager, explorer, drill, sound, i18n }}>
       <TrainerApp />
     </AnalysisContext.Provider>
   </StrictMode>,

@@ -1,6 +1,7 @@
 import type { BookMove, OpeningFilter } from '../core/openings';
 import type { ExplorerState, PositionOpening } from '../core/opening.explorer';
 import { DRILL_SECTIONS } from '../core/drill.manager';
+import { useI18n } from '../hooks/useAnalysis';
 
 export interface OpeningExplorerPanelProps {
   state: ExplorerState;
@@ -17,25 +18,26 @@ export interface OpeningExplorerPanelProps {
 export function OpeningExplorerPanel(props: OpeningExplorerPanelProps) {
   const { state, position, moves, canGoBack } = props;
   const f = state.filter;
+  const { t } = useI18n();
   return (
     <section className="panel explorer-panel">
       <header className="panel-head">
-        <span>Обзор дебютов</span>
+        <span>{t('explorer.title')}</span>
         <span className="row-buttons">
-          <button className="small" onClick={props.onBack} disabled={!canGoBack} title="Назад (←)">
-            ◀ Назад
+          <button className="small" onClick={props.onBack} disabled={!canGoBack} title={t('explorer.backTitle')}>
+            {t('explorer.back')}
           </button>
           <button className="small" onClick={props.onRoot}>
-            В начало
+            {t('explorer.root')}
           </button>
         </span>
       </header>
 
-      {state.status === 'loading' && <p className="muted small-text">Загрузка книги дебютов…</p>}
+      {state.status === 'loading' && <p className="muted small-text">{t('explorer.loading')}</p>}
       {state.status === 'error' && <p className="error">{state.error}</p>}
 
       <div className={`theory-flag ${position.inBook ? 'in' : 'out'}`}>
-        {position.inBook ? '📖 В теории' : 'Вне теории'}
+        {position.inBook ? t('explorer.inBook') : t('explorer.outOfBook')}
         {position.opening && (
           <span>
             : <strong>{position.opening.name}</strong> <span className="eco">{position.opening.eco}</span>
@@ -50,31 +52,31 @@ export function OpeningExplorerPanel(props: OpeningExplorerPanelProps) {
             const s = DRILL_SECTIONS.find((x) => x.id === e.target.value);
             if (s) props.onPreset(s.filter);
           }}
-          aria-label="Раздел"
+          aria-label={t('explorer.section')}
         >
-          <option value="">Раздел…</option>
+          <option value="">{t('explorer.sectionPlaceholder')}</option>
           {DRILL_SECTIONS.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.title}
+              {t(s.title)}
             </option>
           ))}
         </select>
         <input
           type="search"
-          placeholder="Название: «индийск», «гамбит»…"
+          placeholder={t('explorer.search')}
           value={f.query ?? ''}
           onChange={(e) => props.onFilter({ query: e.target.value || undefined })}
         />
         <input
           className="eco-input"
-          placeholder="ECO от"
+          placeholder={t('explorer.ecoFrom')}
           maxLength={3}
           value={f.ecoFrom ?? ''}
           onChange={(e) => props.onFilter({ ecoFrom: e.target.value.toUpperCase() || undefined })}
         />
         <input
           className="eco-input"
-          placeholder="до"
+          placeholder={t('explorer.ecoTo')}
           maxLength={3}
           value={f.ecoTo ?? ''}
           onChange={(e) => props.onFilter({ ecoTo: e.target.value.toUpperCase() || undefined })}
@@ -82,16 +84,16 @@ export function OpeningExplorerPanel(props: OpeningExplorerPanelProps) {
         <select
           value={f.color ?? ''}
           onChange={(e) => props.onFilter({ color: e.target.value === 'w' || e.target.value === 'b' ? e.target.value : null })}
-          aria-label="Цвет"
+          aria-label={t('explorer.side')}
         >
-          <option value="">Любой цвет</option>
-          <option value="w">За белых</option>
-          <option value="b">За чёрных</option>
+          <option value="">{t('explorer.anySide')}</option>
+          <option value="w">{t('explorer.forWhite')}</option>
+          <option value="b">{t('explorer.forBlack')}</option>
         </select>
       </div>
 
       {moves.length === 0 ? (
-        <p className="muted small-text">{position.inBook ? 'В выбранном фильтре продолжений нет.' : 'Книжных продолжений нет.'}</p>
+        <p className="muted small-text">{position.inBook ? t('explorer.noFiltered') : t('explorer.noBook')}</p>
       ) : (
         <ul className="book-moves">
           {moves.map((m) => (
@@ -100,7 +102,7 @@ export function OpeningExplorerPanel(props: OpeningExplorerPanelProps) {
                 <strong className="book-san">{m.san}</strong>
                 <span className="book-name">{m.opening?.name ?? '—'}</span>
                 <span className="eco">{m.opening?.eco ?? ''}</span>
-                <span className="muted small-text" title="Число именованных линий через этот ход">
+                <span className="muted small-text" title={t('explorer.linesTitle')}>
                   {m.lines}
                 </span>
               </button>

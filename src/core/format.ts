@@ -1,5 +1,6 @@
 import { whiteWinChance } from './classification';
 import { MATED_CP, type MoveClass, type Score } from './types';
+import { msg, type MessageKey, type Msg } from './i18n';
 
 /** "+0.35", "-1.20", "#3", "#-2", "1-0" (already mated). */
 export function formatScore(score: Score | null): string {
@@ -16,9 +17,9 @@ export function whiteBarPercent(score: Score | null): number {
   return score ? whiteWinChance(score) : 50;
 }
 
-export function formatDuration(ms: number): string {
-  if (ms < 1000) return `${Math.round(ms)} мс`;
-  return `${(ms / 1000).toFixed(1)} с`;
+export function formatDuration(ms: number): Msg {
+  if (ms < 1000) return msg('unit.ms', { n: Math.round(ms) });
+  return msg('unit.s', { n: (ms / 1000).toFixed(1) });
 }
 
 export function formatCount(n: number | null): string {
@@ -28,11 +29,11 @@ export function formatCount(n: number | null): string {
   return String(n);
 }
 
-export const MOVE_CLASS_LABEL: Record<MoveClass, { label: string; symbol: string }> = {
-  brilliant: { label: 'Блестящий', symbol: '!!' },
-  best: { label: 'Лучший', symbol: '★' },
-  good: { label: 'Хороший', symbol: '✓' },
-  inaccuracy: { label: 'Неточность', symbol: '?!' },
-  mistake: { label: 'Ошибка', symbol: '?' },
-  blunder: { label: 'Зевок', symbol: '??' },
+export const MOVE_CLASS_LABEL: Record<MoveClass, { label: MessageKey; symbol: string }> = {
+  brilliant: { label: 'class.brilliant', symbol: '!!' },
+  best: { label: 'class.best', symbol: '★' },
+  good: { label: 'class.good', symbol: '✓' },
+  inaccuracy: { label: 'class.inaccuracy', symbol: '?!' },
+  mistake: { label: 'class.mistake', symbol: '?' },
+  blunder: { label: 'class.blunder', symbol: '??' },
 };
