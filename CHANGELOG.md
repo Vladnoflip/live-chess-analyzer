@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.1] — Sponsorship links
+
+Added donation and sponsorship links. The project stays completely free under GPL-3.0.
+
+### Added
+- `.github/FUNDING.yml` with GitHub Sponsors, which shows the *Sponsor* button on the repository page. Ko-fi, Buy Me a Coffee and custom links are prepared as comments.
+- A small *❤️ Support the Project* link in the web app footer, at the bottom of the extension popup and on the trainer page. It opens GitHub Sponsors in a new tab and needs no new extension permissions; the URL is defined once in `src/core/support.ts`.
+- Dictionary entries: "Support the Project" / «Поддержать проект» and "Buy me a coffee" / «Угостить кофе» (the latter is the link tooltip).
+- README: a *Sponsor* badge and a "Support the Project" section.
+- E2E check that the popup link points to GitHub Sponsors and opens in a new tab.
+
 ## [0.6.0] — Expanded opening book and granular trainer categories
 
 Expanded opening book and granular trainer categories.
@@ -96,6 +107,7 @@ Expanded opening book and granular trainer categories.
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.6.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.1
 [0.6.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.0
 [0.5.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.1
 [0.5.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.0

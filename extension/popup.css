@@ -81,3 +81,22 @@ footer {
 .trainer-btn:hover {
   filter: brightness(1.08);
 }
+.support-row {
+  margin: 8px 0 0;
+  text-align: center;
+}
+.support-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #f2b8c6;
+  background: rgba(242, 184, 198, 0.08);
+  border: 1px solid rgba(242, 184, 198, 0.25);
+  text-decoration: none;
+}
+.support-link:hover {
+  background: rgba(242, 184, 198, 0.16);
+}

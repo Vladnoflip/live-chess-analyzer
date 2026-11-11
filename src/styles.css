@@ -920,3 +920,31 @@ textarea.invalid {
 .tree-label:hover {
   color: var(--accent);
 }
+
+/* ── footer and support link ── */
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.support-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #f2b8c6;
+  background: rgba(242, 184, 198, 0.08);
+  border: 1px solid rgba(242, 184, 198, 0.25);
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+.support-link:hover {
+  background: rgba(242, 184, 198, 0.16);
+  border-color: rgba(242, 184, 198, 0.5);
+}

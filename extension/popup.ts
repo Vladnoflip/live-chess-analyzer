@@ -1,5 +1,6 @@
 import { DEPTH_LIMITS, FONTS, loadSettings, saveSettings, type ExtensionSettings, type FontId } from './shared/settings';
 import { DICTIONARY_KEYS, isLocalePref, resolveLocale, translate, type Locale, type MessageKey } from '../src/core/i18n';
+import { SPONSOR_URL } from '../src/core/support';
 
 type BoolKey = 'enabled' | 'showArrow' | 'showEvalBar' | 'onlyMyTurn' | 'showPanel' | 'showOpening';
 type NumKey = 'depth' | 'threads' | 'hashMb';
@@ -20,6 +21,7 @@ function applyTexts(locale: Locale): void {
     const key = node.dataset.i18n;
     if (key && DICTIONARY_KEYS.has(key)) node.textContent = translate(locale, key as MessageKey);
   }
+  el<HTMLAnchorElement>('support').title = translate(locale, 'support.coffee');
   for (const opt of document.querySelectorAll<HTMLOptionElement>('#fontFamily option')) {
     const font = FONTS[opt.value as FontId];
     if (font) opt.textContent = translate(locale, font.label);
@@ -28,6 +30,9 @@ function applyTexts(locale: Locale): void {
 
 async function main(): Promise<void> {
   const settings: ExtensionSettings = await loadSettings();
+
+  // A plain link opened in a new tab: no extra permission and no request made by the extension.
+  el<HTMLAnchorElement>('support').href = SPONSOR_URL;
 
   const localeSelect = el<HTMLSelectElement>('locale');
   localeSelect.value = settings.locale;

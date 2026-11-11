@@ -8,6 +8,7 @@ import { textColorOn } from '../../src/core/move-score';
 import type { Candidate } from '../../src/core/candidates';
 import type { Color } from '../../src/core/types';
 import { SoundControls } from '../../src/components/SoundControls';
+import { SupportLink } from '../../src/components/SupportLink';
 
 export function TrainerApp() {
   const { manager, drill } = useServices();
@@ -91,6 +92,9 @@ export function TrainerApp() {
           </aside>
         </main>
       )}
+      <footer className="t-footer">
+        <SupportLink />
+      </footer>
     </div>
   );
 }

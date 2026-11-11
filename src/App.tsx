@@ -13,6 +13,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { VariantsPanel } from './components/VariantsPanel';
 import { OpeningExplorerPanel } from './components/OpeningExplorerPanel';
 import { DrillPanel } from './components/DrillPanel';
+import { SupportLink } from './components/SupportLink';
 import { DRILL_SECTIONS, sectionLineCount } from './core/drill.manager';
 
 type Mode = 'analysis' | 'explorer' | 'drill';
@@ -215,6 +216,10 @@ export function App() {
           )}
         </aside>
       </main>
+      <footer className="app-footer">
+        <span className="muted small-text">LiveChess Analyzer · GPL-3.0</span>
+        <SupportLink />
+      </footer>
     </div>
   );
 }

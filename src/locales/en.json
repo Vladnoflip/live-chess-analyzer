@@ -231,5 +231,7 @@
   "explorer.treeHint": "Click a name to play its main line on the board",
   "explorer.lines": "{n} lines",
   "explorer.expand": "Expand",
-  "explorer.collapse": "Collapse"
+  "explorer.collapse": "Collapse",
+  "support.project": "Support the Project",
+  "support.coffee": "Buy me a coffee"
 }

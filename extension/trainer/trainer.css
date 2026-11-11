@@ -580,3 +580,31 @@ button:disabled {
 .start-section {
   font-weight: 650;
 }
+
+/* ── footer and support link ── */
+.t-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+.support-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82em;
+  color: #b0606f;
+  background: rgba(214, 140, 158, 0.1);
+  border: 1px solid rgba(214, 140, 158, 0.28);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.support-link:hover {
+  background: rgba(214, 140, 158, 0.18);
+}
+@media (prefers-color-scheme: dark) {
+  .support-link {
+    color: #e8a9b7;
+  }
+}

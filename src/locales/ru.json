@@ -231,5 +231,7 @@
   "explorer.treeHint": "Клик по названию — основная линия на доске",
   "explorer.lines": "линий: {n}",
   "explorer.expand": "Развернуть",
-  "explorer.collapse": "Свернуть"
+  "explorer.collapse": "Свернуть",
+  "support.project": "Поддержать проект",
+  "support.coffee": "Угостить кофе"
 }
