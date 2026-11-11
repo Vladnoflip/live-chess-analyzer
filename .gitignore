@@ -28,6 +28,8 @@ puppeteer-profile*/
 
 # Logs and OS / editor files
 *.log
+# Recorded Stockfish output used as a test fixture
+!tests/fixtures/*.log
 npm-debug.log*
 .DS_Store
 Thumbs.db
