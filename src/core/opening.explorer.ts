@@ -1,5 +1,5 @@
 import { Store } from './observable';
-import { loadOpeningBook, type BookMove, type OpeningBook, type OpeningEntry, type OpeningFilter } from './openings';
+import { loadOpeningBook, type BookMove, type NameNode, type OpeningBook, type OpeningEntry, type OpeningFilter } from './openings';
 import type { GameMove } from '../services/board.service';
 
 export interface ExplorerState {
@@ -54,6 +54,16 @@ export class OpeningExplorer extends Store<ExplorerState> {
 
   resetFilter(filter: OpeningFilter = {}): void {
     this.setState({ filter });
+  }
+
+  /** Autocomplete suggestions for the search box. */
+  search(query: string, limit = 8): OpeningEntry[] {
+    return this.book?.search(query, limit) ?? [];
+  }
+
+  /** Opening names as a family → variation → sub-variation tree. */
+  nameTree(): readonly NameNode[] {
+    return this.book?.nameTree() ?? [];
   }
 
   movesAt(fen: string): BookMove[] {

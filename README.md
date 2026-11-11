@@ -25,7 +25,7 @@ Repository: `https://github.com/Vladnoflip/live-chess-analyzer`
 
 ![Extension overlay on an analysis board](docs/screenshots/extension-overlay.png)
 
-**Trainer site** (a page inside the extension): section cards, then a training position after a wrong move, with feedback and engine hints.
+**Trainer site** (a page inside the extension): sections grouped into tabs (here *Gambits*), each card with its move order, ECO range and number of book lines; then a training position after a wrong move, with feedback and engine hints.
 
 ![Trainer: section cards](docs/screenshots/trainer-sections.png)
 
@@ -55,8 +55,9 @@ Extension permissions: `storage` (settings) and `offscreen` (engine host), plus 
 - **0–100 move scores** based on the loss of win probability against the best line (Lichess win-% formula), shown in a badge next to each arrow, in the variants panel and for every move of a reviewed game.
 - **Colour steps** for arrows and score bars: red → orange → yellow → green → dark green, and blue for brilliant moves.
 - **Text explanation of a move**, built from heuristics on top of engine lines and chess.js (no language model): best / only move, missed mate, material loss or sacrifice (static exchange evaluation), king safety, piece mobility, opening theory.
-- **Opening book**: 3,865 named lines from lichess-org/chess-openings (CC0). Positions are looked up by position, so transpositions count as theory. The explorer filters by ECO range, name and side.
-- **Opening trainer** with sections (Indian defences, gambits, Sicilian, French, Caro-Kann, Slav, overview). Any book move counts as correct. Progress — the current line and lifetime statistics per section — is saved in `localStorage` and restored when you reopen the trainer.
+- **Opening book**: the complete lichess-org/chess-openings set (CC0): 3,865 named lines covering all 500 ECO codes A00–E99. Positions are looked up by position, so transpositions count as theory.
+- **Opening explorer**: search with autocomplete. Type "Najdorf", "Evans", "B90" or Russian words such as «Найдорф», and the chosen line is played on the board. A collapsible name tree goes from family to variation to sub-variation (Sicilian Defense → Najdorf Variation → English Attack); the path to the current opening opens automatically. Book moves can be filtered by ECO range, name and side.
+- **Opening trainer** with 19 sections in tabs: *Gambits* (King's, Queen's, Evans, Benko, Budapest, Muzio and all gambits), *Indian* (Nimzo-Indian, King's Indian, Queen's Indian, Grünfeld and all Indian defences), *Semi-open* (Sicilian, French, Caro-Kann, Alekhine, Scandinavian), *Closed* (Slav) and *All*. Every section shows how many book lines it trains (see [Trainer sections](#trainer-sections)). Any book move counts as correct. Progress — the current line and lifetime statistics per section — is saved in `localStorage` and restored when you reopen the trainer.
 - **Standalone trainer site** inside the extension, opened from the popup. It has a soft paper-and-sage theme with automatic dark mode and the cburnett pieces used by lichess.
 
 ### Where trainer progress is stored (not synchronized)
@@ -148,6 +149,37 @@ docs/screenshots/   images used in this README
 ```
 
 The service layer is framework-free. React components only read state through `useSyncExternalStore` and call methods. The app and the extension share `engine.service`, `board.service`, the scoring modules and the opening book.
+
+## Trainer sections
+
+Each section is a filter over the book: an ECO range **and** the family name. The name check keeps out stray lines that share an ECO code, such as the Van Geet Opening in C30–C39 or the Pseudo Queen's Indian in A47. Line counts refer to the bundled book (commit `3ba6b20`).
+
+| Tab | Section | ECO | Name filter | Lines | Default side |
+|---|---|---|---|---|---|
+| Gambits | King's Gambit | C30–C39 | King's Gambit | 191 | White |
+| Gambits | Queen's Gambit | D06–D69 | — (QGD, QGA, Slav and Semi-Slav lines) | 426 | White |
+| Gambits | Evans Gambit | C51–C52 | Evans | 51 | White |
+| Gambits | Benko Gambit | A57–A59 | Benko | 24 | Black |
+| Gambits | Budapest Gambit | A51–A52 | Budapest | 11 | Black |
+| Gambits | Muzio Gambit | C37 | Muzio | 11 | White |
+| Gambits | All gambits | — | Gambit | 1315 | White |
+| Indian | Nimzo-Indian Defence | E20–E59 | Nimzo-Indian | 104 | Black |
+| Indian | King's Indian Defence | E60–E99 | King's Indian Defense | 119 | Black |
+| Indian | Queen's Indian Defence | E12–E19 | Queen's Indian Defense | 73 | Black |
+| Indian | Grünfeld Defence | D70–D99 | Grünfeld | 82 | Black |
+| Indian | All Indian defences | A45–E99 | Indian Defense | 385 | Black |
+| Semi-open | Sicilian Defence | B20–B99 | Sicilian Defense | 400 | Black |
+| Semi-open | French Defence | C00–C19 | French Defense | 212 | Black |
+| Semi-open | Caro-Kann Defence | B10–B19 | Caro-Kann | 110 | Black |
+| Semi-open | Alekhine Defence | B02–B05 | Alekhine | 56 | Black |
+| Semi-open | Scandinavian Defence | B01 | Scandinavian | 45 | Black |
+| Closed | Slav Defence | D10–D19 | Slav Defense | 52 | Black |
+| All | Overview | A00–E99 | — | 3865 | White |
+
+Notes on the ranges:
+- The Queen's Indian proper is E12–E19. E00–E11 is the Catalan and the Bogo-Indian.
+- In the lichess book, the Budapest is named "Indian Defense: Budapest Gambit".
+- The Muzio section means the King's Gambit Accepted lines. The Vienna "Hamppe-Muzio" (C25) is a different opening.
 
 ## How move scoring works
 

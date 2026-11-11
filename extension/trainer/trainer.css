@@ -524,3 +524,59 @@ button:disabled {
 .piece-in-hand {
   filter: drop-shadow(0 0.08px 0.08px rgba(0, 0, 0, 0.45));
 }
+
+/* ── v0.6: group tabs and compact section cards ── */
+.group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.group-tabs button {
+  background: var(--surface);
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: 999px;
+  box-shadow: 0 1px 3px rgba(92, 78, 52, 0.12);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.group-tabs button.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.tab-count {
+  font-size: 0.75em;
+  opacity: 0.8;
+}
+.cards {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+.card {
+  padding: 12px 14px;
+  border-radius: 14px;
+  gap: 4px;
+}
+.card-title {
+  font-size: 0.98em;
+}
+.card-moves {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.78em;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-meta {
+  gap: 8px;
+  margin-top: 2px;
+}
+.card-lines {
+  margin-left: auto;
+}
+.start-section {
+  font-weight: 650;
+}

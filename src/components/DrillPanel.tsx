@@ -1,18 +1,20 @@
 import { useState } from 'react';
-import { DRILL_SECTIONS, type DrillState } from '../core/drill.manager';
+import { DRILL_GROUPS, DRILL_SECTIONS, type DrillState } from '../core/drill.manager';
 import type { Color } from '../core/types';
 import { useI18n } from '../hooks/useAnalysis';
 
 export interface DrillPanelProps {
   state: DrillState;
   bookReady: boolean;
+  /** Named book lines per section id (empty until the book has loaded). */
+  lineCounts: Readonly<Record<string, number>>;
   onStart(options: { sectionId: string; userColor: Color; maxMoves: number }): void;
   onRestart(): void;
   onStop(): void;
   onReveal(): void;
 }
 
-export function DrillPanel({ state, bookReady, onStart, onRestart, onStop, onReveal }: DrillPanelProps) {
+export function DrillPanel({ state, bookReady, lineCounts, onStart, onRestart, onStop, onReveal }: DrillPanelProps) {
   const [sectionId, setSectionId] = useState(state.sectionId);
   const section = DRILL_SECTIONS.find((s) => s.id === sectionId) ?? DRILL_SECTIONS[0]!;
   const [color, setColor] = useState<Color>(section.defaultColor);
@@ -51,10 +53,14 @@ export function DrillPanel({ state, bookReady, onStart, onRestart, onStop, onRev
                 if (s) setColor(s.defaultColor);
               }}
             >
-              {DRILL_SECTIONS.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {t(s.title)}
-                </option>
+              {DRILL_GROUPS.map((g) => (
+                <optgroup key={g.id} label={t(g.title)}>
+                  {DRILL_SECTIONS.filter((s) => s.group === g.id).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {lineCounts[s.id] !== undefined ? t('drill.sectionOption', { title: t(s.title), n: lineCounts[s.id]! }) : t(s.title)}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </label>

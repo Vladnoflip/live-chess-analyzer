@@ -92,10 +92,18 @@ try {
   await trainer.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: 'light' }]);
   await trainer.goto(`chrome-extension://${extId}/extension/trainer.html`);
   await trainer.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent === 'Start training'), { timeout: 20000 });
-  await trainer.evaluate(() => [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('Indian defences'))?.click());
+  // Section picker: the Gambits tab with King's Gambit selected (shows the line counts).
+  await trainer.evaluate(() => [...document.querySelectorAll('.group-tabs button')].find((b) => b.textContent?.startsWith('Gambits'))?.click());
+  await sleep(150);
+  await trainer.evaluate(() => [...document.querySelectorAll('.card')].find((c) => c.querySelector('.card-title')?.textContent === "King's Gambit")?.click());
   await sleep(300);
   await assertEnglish(trainer, 'trainer sections');
   await trainer.screenshot({ path: join(out, 'trainer-sections.png') });
+  // The training screenshot uses the Indian defences (the user plays Black).
+  await trainer.evaluate(() => [...document.querySelectorAll('.group-tabs button')].find((b) => b.textContent?.startsWith('Indian'))?.click());
+  await sleep(150);
+  await trainer.evaluate(() => [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('All Indian defences'))?.click());
+  await sleep(150);
 
   await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Start training')?.click());
   await trainer.waitForFunction(() => document.querySelector('.move-strip')?.textContent?.includes('d4'), { timeout: 15000 });

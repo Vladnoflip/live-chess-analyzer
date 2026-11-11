@@ -13,6 +13,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { VariantsPanel } from './components/VariantsPanel';
 import { OpeningExplorerPanel } from './components/OpeningExplorerPanel';
 import { DrillPanel } from './components/DrillPanel';
+import { DRILL_SECTIONS, sectionLineCount } from './core/drill.manager';
 
 type Mode = 'analysis' | 'explorer' | 'drill';
 
@@ -42,6 +43,12 @@ export function App() {
   const targetsFrom = useCallback((sq: Square) => manager.targetsFrom(sq), [manager, state.fen]);
   const position = useMemo(() => explorer.describe(state.fen), [explorer, explorerState.status, state.fen]);
   const bookMoves = useMemo(() => explorer.movesAt(state.fen), [explorer, explorerState, state.fen]);
+  const tree = useMemo(() => explorer.nameTree(), [explorer, explorerState.status]);
+  const lineCounts = useMemo(() => {
+    const book = explorer.getBook();
+    return book ? Object.fromEntries(DRILL_SECTIONS.map((s) => [s.id, sectionLineCount(book, s)])) : {};
+  }, [explorer, explorerState.status]);
+  const searchOpenings = useCallback((q: string) => explorer.search(q), [explorer, explorerState.status]);
   const bookPlies = useMemo(() => explorer.bookPlies(state.moves), [explorer, explorerState.status, state.moves]);
 
   const drilling = mode === 'drill' && drillState.status !== 'idle';
@@ -140,6 +147,9 @@ export function App() {
               state={explorerState}
               position={position}
               moves={bookMoves}
+              tree={tree}
+              search={searchOpenings}
+              onOpenLine={(entry) => manager.loadUciLine(START_FEN, entry.uci)}
               canGoBack={state.ply > 0}
               onPlay={(uci) => manager.playUci(uci)}
               onBack={() => manager.prev()}
@@ -152,6 +162,7 @@ export function App() {
             <DrillPanel
               state={drillState}
               bookReady={explorerState.status === 'ready'}
+              lineCounts={lineCounts}
               onStart={(o) => {
                 setFlipped(o.userColor === 'b');
                 drill.start(o);

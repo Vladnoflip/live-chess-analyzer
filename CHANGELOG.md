@@ -2,6 +2,32 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] — Expanded opening book and granular trainer categories
+
+Expanded opening book and granular trainer categories.
+
+### Added
+- **Trainer sections.** 19 granular sections grouped into tabs.
+  - *Gambits*: King's Gambit (C30–C39), Queen's Gambit (D06–D69), Evans (C51–C52), Benko (A57–A59), Budapest (A51–A52) and Muzio (C37), plus all gambits.
+  - *Indian*: Nimzo-Indian (E20–E59), King's Indian (E60–E99), Queen's Indian (E12–E19) and Grünfeld (D70–D99), plus all Indian defences.
+  - *Semi-open*: Sicilian, French, Caro-Kann, Alekhine and Scandinavian.
+  - *Closed*: Slav.
+  - *All*: an overview.
+
+  Each section shows its number of book lines.
+- **Explorer search with autocomplete.** It accepts English names, Russian words («Найдорф», «Эванс») and ECO codes, matches names without diacritics (Grünfeld = Grunfeld), and plays the chosen line on the board.
+- **Explorer name tree.** It goes from family to variation to sub-variation (Sicilian Defense → Najdorf Variation → English Attack), with line counts and ECO ranges. The path to the current opening opens automatically.
+- **Tests** for search, the tree, every section's ECO range and family, the defining move orders of the new gambits, and complete trainer lines played out on the real book.
+
+### Changed
+- **Section filters.** Sections now filter by an ECO range and the family name, which keeps out stray lines that share an ECO code. This also changes three existing sections:
+  - Sicilian, French and Caro-Kann gained ECO ranges;
+  - Slav is now D10–D19, so Semi-Slav lines (D43–D49) moved to the Queen's Gambit section.
+- **Trainer section picker.** On the trainer site, it uses tabs and compact cards showing the move order, ECO range, line count and accuracy. In the web app it is a grouped list with line counts.
+
+### Verified
+- The bundled book is the complete lichess-org/chess-openings set: all five TSV files are identical to the upstream `master` (3,865 lines, all 500 ECO codes). Nothing was missing.
+
 ## [0.5.1] — CI fix
 
 ### Fixed
@@ -70,6 +96,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.6.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.0
 [0.5.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.1
 [0.5.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.4.0

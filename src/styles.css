@@ -796,3 +796,127 @@ textarea.invalid {
   border-radius: 6px;
   padding: 3px 6px;
 }
+
+/* ── explorer: search with autocomplete, tabs, name tree ── */
+.opening-search {
+  position: relative;
+  margin-bottom: 8px;
+}
+.opening-search input {
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+.opening-search input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.suggestions {
+  position: absolute;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: calc(100% + 2px);
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  max-height: 320px;
+  overflow-y: auto;
+}
+.suggestions > li.muted {
+  padding: 6px 8px;
+}
+.suggestions button {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  grid-template-areas: 'eco name' 'eco line';
+  gap: 0 8px;
+  text-align: left;
+  background: none;
+  border-color: transparent;
+  padding: 5px 6px;
+  font-size: 13px;
+}
+.suggestions button .eco {
+  grid-area: eco;
+  align-self: center;
+}
+.suggestion-name {
+  grid-area: name;
+}
+.suggestion-line {
+  grid-area: line;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 11px;
+}
+.suggestions button.active,
+.suggestions button:hover {
+  background: var(--panel);
+  border-color: var(--accent);
+}
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin: 4px 0 8px;
+}
+.tabs button {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 5px 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.tabs button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+.tree-wrap {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.name-tree {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 14px;
+}
+.tree-wrap > .name-tree {
+  padding-left: 0;
+}
+.tree-row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  border-radius: 4px;
+}
+.tree-row.current {
+  background: rgba(79, 157, 255, 0.15);
+}
+.twisty,
+.tree-label {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  text-align: left;
+}
+.twisty {
+  color: var(--muted);
+  font-size: 11px;
+}
+.tree-label:hover {
+  color: var(--accent);
+}

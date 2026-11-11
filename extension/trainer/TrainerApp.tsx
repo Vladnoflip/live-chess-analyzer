@@ -2,24 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Square } from 'chess.js';
 import { useAnalysis, useDrill, useExplorer, useI18n, useServices } from '../../src/hooks/useAnalysis';
 import { Board } from '../../src/components/Board';
-import { DRILL_SECTIONS, type DrillState, type SectionTotals } from '../../src/core/drill.manager';
+import { DRILL_GROUPS, DRILL_SECTIONS, sectionLineCount, type DrillGroup, type DrillState, type SectionTotals } from '../../src/core/drill.manager';
 import { formatScore } from '../../src/core/format';
 import { textColorOn } from '../../src/core/move-score';
 import type { Candidate } from '../../src/core/candidates';
 import type { Color } from '../../src/core/types';
-import type { MessageKey } from '../../src/core/i18n';
 import { SoundControls } from '../../src/components/SoundControls';
-
-/** Short descriptions for the section cards. */
-const ABOUT: Record<string, { readonly blurb: MessageKey; readonly eco: string | null; readonly icon: string }> = {
-  all: { blurb: 'section.all.blurb', eco: 'A00–E99', icon: '♞' },
-  indian: { blurb: 'section.indian.blurb', eco: 'A45–E99', icon: '♝' },
-  gambits: { blurb: 'section.gambits.blurb', eco: null, icon: '♟' },
-  sicilian: { blurb: 'section.sicilian.blurb', eco: 'B20–B99', icon: '♛' },
-  french: { blurb: 'section.french.blurb', eco: 'C00–C19', icon: '♜' },
-  caro: { blurb: 'section.caro.blurb', eco: 'B10–B19', icon: '♚' },
-  slav: { blurb: 'section.slav.blurb', eco: 'D10–D19, D43–D49', icon: '♞' },
-};
 
 export function TrainerApp() {
   const { manager, drill } = useServices();
@@ -27,6 +15,11 @@ export function TrainerApp() {
   const drillState = useDrill();
   const explorerState = useExplorer();
   const bookReady = explorerState.status === 'ready';
+  const { explorer } = useServices();
+  const lineCounts = useMemo(() => {
+    const book = explorer.getBook();
+    return book ? Object.fromEntries(DRILL_SECTIONS.map((s) => [s.id, sectionLineCount(book, s)])) : {};
+  }, [explorer, bookReady]);
   const { t, locale } = useI18n();
 
   useEffect(() => {
@@ -72,7 +65,7 @@ export function TrainerApp() {
       </header>
 
       {drillState.status === 'idle' ? (
-        <SectionPicker state={drillState} bookReady={bookReady} onStart={(o) => drill.start(o)} />
+        <SectionPicker state={drillState} bookReady={bookReady} lineCounts={lineCounts} onStart={(o) => drill.start(o)} />
       ) : (
         <main className="t-play">
           <div className="t-board-card">
@@ -105,25 +98,37 @@ export function TrainerApp() {
 function SectionPicker({
   state,
   bookReady,
+  lineCounts,
   onStart,
 }: {
   state: DrillState;
   bookReady: boolean;
+  lineCounts: Readonly<Record<string, number>>;
   onStart(o: { sectionId: string; userColor: Color; maxMoves: number }): void;
 }) {
   const [selected, setSelected] = useState(state.sectionId);
   const section = DRILL_SECTIONS.find((s) => s.id === selected) ?? DRILL_SECTIONS[0]!;
+  const [group, setGroup] = useState<DrillGroup>(section.group);
   const [color, setColor] = useState<Color>(section.defaultColor);
   const [maxMoves, setMaxMoves] = useState(state.maxMoves);
   const { t } = useI18n();
+  const visible = DRILL_SECTIONS.filter((s) => s.group === group);
 
   return (
     <main className="t-picker">
       <h2>{t('trainer.question')}</h2>
-      <div className="cards">
-        {DRILL_SECTIONS.map((s) => {
-          const about = ABOUT[s.id];
+      <div className="group-tabs" role="tablist">
+        {DRILL_GROUPS.map((g) => (
+          <button key={g.id} role="tab" aria-selected={group === g.id} className={group === g.id ? 'on' : ''} onClick={() => setGroup(g.id)}>
+            {t(g.title)}
+            <span className="tab-count">{DRILL_SECTIONS.filter((s) => s.group === g.id).length}</span>
+          </button>
+        ))}
+      </div>
+      <div className="cards" role="tabpanel">
+        {visible.map((s) => {
           const totals = state.totals[s.id];
+          const lines = lineCounts[s.id];
           return (
             <button
               key={s.id}
@@ -133,13 +138,11 @@ function SectionPicker({
                 setColor(s.defaultColor);
               }}
             >
-              <span className="card-icon" aria-hidden>
-                {about?.icon}
-              </span>
               <span className="card-title">{t(s.title)}</span>
-              <span className="card-blurb">{about ? t(about.blurb) : ''}</span>
+              <span className="card-moves">{s.moves || '\u00a0'}</span>
               <span className="card-meta">
-                <span>{about ? (about.eco ?? t('section.ecoVarious')) : ''}</span>
+                <span>{s.eco ?? t('section.ecoVarious')}</span>
+                {lines !== undefined && <span className="card-lines">{t('section.lineCount', { n: lines })}</span>}
                 {totals && <Accuracy totals={totals} />}
               </span>
             </button>
@@ -148,6 +151,7 @@ function SectionPicker({
       </div>
 
       <div className="start-bar">
+        <span className="start-section">{t(section.title)}</span>
         <div className="seg" role="group" aria-label={t('trainer.colour')}>
           <button className={color === 'w' ? 'on' : ''} onClick={() => setColor('w')}>
             {t('trainer.asWhite')}

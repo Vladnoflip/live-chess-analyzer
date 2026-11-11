@@ -5,26 +5,73 @@ import type { MessageKey, MessageParams, Msg } from './i18n';
 import type { BoardService } from '../services/board.service';
 import { START_FEN } from '../services/board.service';
 
+export type DrillGroup = 'all' | 'gambits' | 'indian' | 'semiopen' | 'closed';
+
 export interface DrillSection {
   readonly id: string;
+  readonly group: DrillGroup;
   /** i18n key of the section name. */
   readonly title: MessageKey;
+  /** Defining move order (language-neutral), shown on the card. */
+  readonly moves: string;
+  /** ECO range shown on the card; null when the section is selected by name only. */
+  readonly eco: string | null;
   readonly filter: OpeningFilter;
   /** Side the user plays by default in this section. */
   readonly defaultColor: Color;
 }
 
-/** Trainer sections are plain filters over the book. */
-export const DRILL_SECTIONS: readonly DrillSection[] = [
-  { id: 'all', title: 'section.all', filter: {}, defaultColor: 'w' },
-  // "Indian Defense" excludes the King's Indian Attack (a White system); A45+ skips flank openings.
-  { id: 'indian', title: 'section.indian', filter: { query: 'indian defense', ecoFrom: 'A45' }, defaultColor: 'b' },
-  { id: 'gambits', title: 'section.gambits', filter: { query: 'gambit' }, defaultColor: 'w' },
-  { id: 'sicilian', title: 'section.sicilian', filter: { query: 'sicilian defense' }, defaultColor: 'b' },
-  { id: 'french', title: 'section.french', filter: { query: 'french defense' }, defaultColor: 'b' },
-  { id: 'caro', title: 'section.caro', filter: { query: 'caro-kann' }, defaultColor: 'b' },
-  { id: 'slav', title: 'section.slav', filter: { query: 'slav defense' }, defaultColor: 'b' },
+/** Display order of the trainer tabs. */
+export const DRILL_GROUPS: readonly { readonly id: DrillGroup; readonly title: MessageKey }[] = [
+  { id: 'gambits', title: 'group.gambits' },
+  { id: 'indian', title: 'group.indian' },
+  { id: 'semiopen', title: 'group.semiopen' },
+  { id: 'closed', title: 'group.closed' },
+  { id: 'all', title: 'group.all' },
 ];
+
+/**
+ * Trainer sections are plain filters over the book: an ECO range plus the family name,
+ * so stray lines that happen to share an ECO code (e.g. Van Geet in C30–C39) stay out.
+ */
+export const DRILL_SECTIONS: readonly DrillSection[] = [
+  { id: 'all', group: 'all', title: 'section.all', moves: '', eco: 'A00–E99', filter: {}, defaultColor: 'w' },
+
+  // Gambits. "gambits" is the broad section (kept for saved progress).
+  { id: 'gambits', group: 'gambits', title: 'section.gambits', moves: '', eco: null, filter: { query: 'gambit' }, defaultColor: 'w' },
+  { id: 'kings-gambit', group: 'gambits', title: 'section.kingsGambit', moves: '1.e4 e5 2.f4', eco: 'C30–C39', filter: { ecoFrom: 'C30', ecoTo: 'C39', query: "king's gambit" }, defaultColor: 'w' },
+  { id: 'queens-gambit', group: 'gambits', title: 'section.queensGambit', moves: '1.d4 d5 2.c4', eco: 'D06–D69', filter: { ecoFrom: 'D06', ecoTo: 'D69' }, defaultColor: 'w' },
+  { id: 'evans', group: 'gambits', title: 'section.evans', moves: '1.e4 e5 2.Nf3 Nc6 3.Bc4 Bc5 4.b4', eco: 'C51–C52', filter: { ecoFrom: 'C51', ecoTo: 'C52', query: 'evans' }, defaultColor: 'w' },
+  { id: 'benko', group: 'gambits', title: 'section.benko', moves: '1.d4 Nf6 2.c4 c5 3.d5 b5', eco: 'A57–A59', filter: { ecoFrom: 'A57', ecoTo: 'A59', query: 'benko' }, defaultColor: 'b' },
+  // lichess names it "Indian Defense: Budapest Gambit".
+  { id: 'budapest', group: 'gambits', title: 'section.budapest', moves: '1.d4 Nf6 2.c4 e5', eco: 'A51–A52', filter: { ecoFrom: 'A51', ecoTo: 'A52', query: 'budapest' }, defaultColor: 'b' },
+  // King's Gambit Accepted lines only; the Vienna "Hamppe-Muzio" (C25) is a different opening.
+  { id: 'muzio', group: 'gambits', title: 'section.muzio', moves: '1.e4 e5 2.f4 exf4 3.Nf3 g5 4.Bc4 g4 5.O-O', eco: 'C37', filter: { ecoFrom: 'C37', ecoTo: 'C37', query: 'muzio' }, defaultColor: 'w' },
+
+  // Indian defences. "Indian Defense" excludes the King's Indian Attack (a White system); A45+ skips flank openings.
+  { id: 'indian', group: 'indian', title: 'section.indian', moves: '1.d4 Nf6', eco: 'A45–E99', filter: { query: 'indian defense', ecoFrom: 'A45' }, defaultColor: 'b' },
+  { id: 'nimzo', group: 'indian', title: 'section.nimzo', moves: '1.d4 Nf6 2.c4 e6 3.Nc3 Bb4', eco: 'E20–E59', filter: { ecoFrom: 'E20', ecoTo: 'E59', query: 'nimzo-indian' }, defaultColor: 'b' },
+  { id: 'kings-indian', group: 'indian', title: 'section.kingsIndian', moves: '1.d4 Nf6 2.c4 g6 3.Nc3 Bg7', eco: 'E60–E99', filter: { ecoFrom: 'E60', ecoTo: 'E99', query: "king's indian defense" }, defaultColor: 'b' },
+  // E00–E11 is Catalan and Bogo-Indian territory; the Queen's Indian itself is E12–E19
+  // (the range also keeps out the "Pseudo Queen's Indian", A47).
+  { id: 'queens-indian', group: 'indian', title: 'section.queensIndian', moves: '1.d4 Nf6 2.c4 e6 3.Nf3 b6', eco: 'E12–E19', filter: { ecoFrom: 'E12', ecoTo: 'E19', query: "queen's indian defense" }, defaultColor: 'b' },
+  { id: 'grunfeld', group: 'indian', title: 'section.grunfeld', moves: '1.d4 Nf6 2.c4 g6 3.Nc3 d5', eco: 'D70–D99', filter: { ecoFrom: 'D70', ecoTo: 'D99', query: 'grunfeld' }, defaultColor: 'b' },
+
+  // Semi-open games.
+  { id: 'sicilian', group: 'semiopen', title: 'section.sicilian', moves: '1.e4 c5', eco: 'B20–B99', filter: { ecoFrom: 'B20', ecoTo: 'B99', query: 'sicilian defense' }, defaultColor: 'b' },
+  { id: 'french', group: 'semiopen', title: 'section.french', moves: '1.e4 e6', eco: 'C00–C19', filter: { ecoFrom: 'C00', ecoTo: 'C19', query: 'french defense' }, defaultColor: 'b' },
+  { id: 'caro', group: 'semiopen', title: 'section.caro', moves: '1.e4 c6', eco: 'B10–B19', filter: { ecoFrom: 'B10', ecoTo: 'B19', query: 'caro-kann' }, defaultColor: 'b' },
+  { id: 'alekhine', group: 'semiopen', title: 'section.alekhine', moves: '1.e4 Nf6', eco: 'B02–B05', filter: { ecoFrom: 'B02', ecoTo: 'B05', query: 'alekhine' }, defaultColor: 'b' },
+  { id: 'scandinavian', group: 'semiopen', title: 'section.scandinavian', moves: '1.e4 d5', eco: 'B01', filter: { ecoFrom: 'B01', ecoTo: 'B01', query: 'scandinavian' }, defaultColor: 'b' },
+
+  // Closed games.
+  { id: 'slav', group: 'closed', title: 'section.slav', moves: '1.d4 d5 2.c4 c6', eco: 'D10–D19', filter: { ecoFrom: 'D10', ecoTo: 'D19', query: 'slav defense' }, defaultColor: 'b' },
+];
+
+/** Number of named book lines a section trains. */
+export function sectionLineCount(book: OpeningBook, section: DrillSection): number {
+  return book.filterEntries(section.filter).length;
+}
 
 export type DrillTone = 'good' | 'bad' | 'info';
 

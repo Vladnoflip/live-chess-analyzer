@@ -219,7 +219,15 @@ try {
   await trainer.goto(`chrome-extension://${extId}/extension/trainer.html`);
   await trainer.waitForFunction(() => [...document.querySelectorAll('button')].some((b) => b.textContent === 'Start training'), { timeout: 15000 });
   await trainer.evaluate(() => {
-    [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('Indian defences'))?.click();
+    // Sections are grouped into tabs: open "Indian", then the broad Indian-defences card.
+    [...document.querySelectorAll('.group-tabs button')].find((b) => b.textContent?.startsWith('Indian'))?.click();
+  });
+  await sleep(100);
+  const cards = await trainer.evaluate(() => [...document.querySelectorAll('.card .card-title')].map((c) => c.textContent));
+  const counts = await trainer.evaluate(() => [...document.querySelectorAll('.card .card-lines')].map((c) => c.textContent));
+  check('trainer: Indian tab lists its sections with line counts', cards.includes('Nimzo-Indian Defence') && counts.length === cards.length && counts.every((c) => /\d+ lines/.test(c ?? '')), `${cards.join(', ')} | ${counts.join(', ')}`);
+  await trainer.evaluate(() => {
+    [...document.querySelectorAll('.card')].find((c) => c.textContent?.includes('All Indian defences'))?.click();
   });
   await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Start training')?.click());
   await trainer.waitForFunction(() => document.querySelector('.move-strip')?.textContent?.includes('d4'), { timeout: 10000 });
