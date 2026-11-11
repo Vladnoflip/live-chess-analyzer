@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.5.1] — CI fix
+
+### Fixed
+- Fixed CI failure by tracking tests/fixtures/stockfish18-multipv3.log (ignored by *.log rule). No code changes.
+
 ## [0.5.0] — Bilingual UI
 
 ### Added
@@ -65,5 +70,6 @@ All notable changes to this project are documented here. The format follows [Kee
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.5.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.1
 [0.5.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.0
 [0.4.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.4.0
