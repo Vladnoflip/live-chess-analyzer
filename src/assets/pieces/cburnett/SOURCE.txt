@@ -1,0 +1,2 @@
+Pieces: cburnett set by Colin M.L. Burnett, GPLv2+ (https://www.gnu.org/licenses/gpl-2.0.txt)
+Source: https://github.com/lichess-org/lila/tree/9f8dd5df253455cd4890db27e6952b06e071b7e0/public/piece/cburnett

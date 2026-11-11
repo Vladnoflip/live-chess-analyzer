@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>LiveChess Analyzer</title>
+    <link rel="stylesheet" href="./popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>LiveChess Analyzer</h1>
+      <label class="switch"><input type="checkbox" id="enabled" /> Включено</label>
+    </header>
+
+    <section>
+      <label class="check"><input type="checkbox" id="showArrow" /> Стрелка лучшего хода</label>
+      <label class="check"><input type="checkbox" id="showEvalBar" /> Шкала оценки</label>
+      <label class="check"><input type="checkbox" id="showPanel" /> Панель вариантов</label>
+      <label class="check"><input type="checkbox" id="showOpening" /> Название дебюта</label>
+      <label class="check"><input type="checkbox" id="onlyMyTurn" /> Подсказки только в мой ход</label>
+    </section>
+
+    <section>
+      <label class="select">Вариантов
+        <select id="multiPv">
+          <option value="1">1</option>
+          <option value="3">3</option>
+          <option value="5">5</option>
+        </select>
+      </label>
+      <label class="range">Глубина (лимит) <output id="depthOut"></output><input type="range" id="depth" /></label>
+      <label class="range">Потоки CPU <output id="threadsOut"></output><input type="range" id="threads" /></label>
+      <label class="range">Хеш, МБ <output id="hashMbOut"></output><input type="range" id="hashMb" min="16" max="256" step="16" /></label>
+    </section>
+
+    <section>
+      <label class="select">Шрифт <select id="fontFamily"></select></label>
+      <label class="select">Размер текста
+        <select id="fontScale">
+          <option value="90">мелкий</option>
+          <option value="100">обычный</option>
+          <option value="115">крупный</option>
+          <option value="130">очень крупный</option>
+        </select>
+      </label>
+      <p class="font-preview" id="fontPreview">Nf3 +0.27 · Nimzo-Indian Defense, E20</p>
+    </section>
+
+    <section>
+      <button id="openTrainer" class="trainer-btn">Открыть тренажёр дебютов ↗</button>
+    </section>
+
+    <footer>
+      Работает только на досках анализа (chess.com/analysis, lichess.org/analysis) и в партиях против ботов
+      (chess.com/play/computer). В партиях против людей расширение отключено.
+    </footer>
+    <script type="module" src="./popup.ts"></script>
+  </body>
+</html>

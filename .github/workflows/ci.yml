@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chrome for Testing (Puppeteer)
+        run: npx puppeteer browsers install chrome
+
+      - name: Copy Stockfish WASM into public/engine
+        run: npm run copy-engine
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit and integration tests (real Stockfish in Node)
+        run: npm test
+
+      - name: Build web app
+        run: npm run build
+
+      - name: Build Chrome extension
+        run: npm run build:extension
+
+      - name: Extension end-to-end tests (local fixtures)
+        run: node scripts/verify-extension.mjs e2e-screenshots
+
+      - name: Upload e2e screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-screenshots
+          path: e2e-screenshots/
+          if-no-files-found: ignore
