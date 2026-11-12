@@ -31,10 +31,20 @@ export interface ArrowShape {
   readonly originRadius: number;
   /** Frames around the source and target squares (accented arrows only, else null). */
   readonly frames: { readonly from: SquareFrame; readonly to: SquareFrame } | null;
-  /** Where the score badge goes: on the line, before the head. */
+  /** Centre of the score badge: beside the line, just before the head. */
   readonly badge: Point;
+  /** The badge itself: a small rectangle with slightly rounded corners (top-left corner). */
+  readonly badgeBox: BadgeBox;
   /** Line width in squares. */
   readonly width: number;
+}
+
+export interface BadgeBox {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly radius: number;
 }
 
 /** Arrow proportions in squares. */
@@ -48,7 +58,8 @@ export const ARROW = {
   /** Square frames: inset from the square edge and corner radius. */
   frameInset: 0.05,
   frameRadius: 0.14,
-  badgeRadius: 0.17,
+  /** Score badge: rounded rectangle sized to the number of digits. */
+  badge: { height: 0.22, charWidth: 0.09, padding: 0.1, radius: 0.05, gap: 0.03 },
   /** Corner rounding of the head as a fraction of the adjacent edges. */
   tipRounding: 0.12,
   baseRounding: 0.22,
@@ -61,7 +72,13 @@ export function squareCenter(square: string, orientation: 'w' | 'b'): Point {
   return orientation === 'w' ? { x: file + 0.5, y: 7 - rank + 0.5 } : { x: 7 - file + 0.5, y: rank + 0.5 };
 }
 
-export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape {
+/** Badge width and height for a label such as "7", "64" or "100". */
+export function badgeSize(label: string): { width: number; height: number } {
+  const { height, charWidth, padding } = ARROW.badge;
+  return { width: padding + charWidth * Math.max(1, label.length), height };
+}
+
+export function arrowShape(from: Point, to: Point, accent: boolean, badgeLabel = '100'): ArrowShape {
   const kind = accent ? 'accent' : 'normal';
   const width = ARROW.width[kind];
   const headLen = ARROW.headLength[kind];
@@ -102,8 +119,19 @@ export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape 
 
   // Badge sits beside the last segment, level with the head's base, so the thin line
   // and the head stay visible even on one-square moves.
-  const side = ARROW.badgeRadius + headHalf * 0.6;
-  const badge = { x: base.x - uy * side, y: base.y + ux * side };
+  // The offset is the badge's extent across the line, so it never covers the line.
+  const size = badgeSize(badgeLabel);
+  const across = (Math.abs(uy) * size.width + Math.abs(ux) * size.height) / 2;
+  const side = across + width / 2 + ARROW.badge.gap;
+  const anchor = { x: base.x - ux * 0.08, y: base.y - uy * 0.08 };
+  const badge = { x: anchor.x - uy * side, y: anchor.y + ux * side };
+  const badgeBox: BadgeBox = {
+    x: badge.x - size.width / 2,
+    y: badge.y - size.height / 2,
+    width: size.width,
+    height: size.height,
+    radius: ARROW.badge.radius,
+  };
   return {
     shaft,
     head,
@@ -112,6 +140,7 @@ export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape 
     originRadius: ARROW.originRadius[kind],
     frames: accent ? { from: frame(from), to: frame(to) } : null,
     badge,
+    badgeBox,
     width,
   };
 }

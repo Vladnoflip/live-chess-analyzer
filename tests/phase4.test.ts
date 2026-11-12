@@ -3,7 +3,7 @@ import { DrillManager, DRILL_STORAGE_KEY, type KeyValueStorage } from '../src/co
 import { OpeningBook } from '../src/core/openings';
 import { BoardService, START_FEN } from '../src/services/board.service';
 import { scoreToStepColor, textColorOn, BRILLIANT_COLOR } from '../src/core/move-score';
-import { ARROW, arrowShape, squareCenter } from '../src/core/arrow-geometry';
+import { ARROW, arrowShape, badgeSize, squareCenter } from '../src/core/arrow-geometry';
 import { translateMsg } from '../src/core/i18n';
 
 const board = new BoardService();
@@ -167,6 +167,19 @@ describe('arrow geometry', () => {
     expect(s.head[0].y).toBeGreaterThan(4.5); // stops short of e4's centre (y = 4.5)
     expect(s.badge.y).toBeGreaterThan(s.head[0].y); // badge sits before the tip
     expect(Math.abs(s.badge.x - 4.5)).toBeGreaterThan(0.2); // and beside the line, not on it
+    // The badge rectangle does not touch the line (x = 4.5).
+    expect(s.badgeBox.x > 4.5 + s.width / 2 || s.badgeBox.x + s.badgeBox.width < 4.5 - s.width / 2).toBe(true);
+    expect(s.badgeBox.radius).toBeLessThan(s.badgeBox.height / 2); // a rectangle, not a pill
+  });
+
+  it('sizes the badge rectangle to the score', () => {
+    const one = badgeSize('7');
+    const three = badgeSize('100');
+    expect(three.width).toBeGreaterThan(one.width);
+    expect(three.height).toBe(one.height);
+    // Horizontal arrow: the badge sits above or below the line without touching it.
+    const s = arrowShape(squareCenter('a4', 'w'), squareCenter('e4', 'w'), true, '100');
+    expect(s.badgeBox.y > 4.5 + s.width / 2 || s.badgeBox.y + s.badgeBox.height < 4.5 - s.width / 2).toBe(true);
   });
 
   it('bends knight arrows along the long leg first', () => {

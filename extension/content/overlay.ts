@@ -1,7 +1,7 @@
 import type { Square } from 'chess.js';
 import type { Color, Score } from '../../src/core/types';
 import { formatScore, whiteBarPercent } from '../../src/core/format';
-import { ARROW, arrowShape, pointsAttr, squareCenter, type SquareFrame } from '../../src/core/arrow-geometry';
+import { arrowShape, pointsAttr, squareCenter, type SquareFrame } from '../../src/core/arrow-geometry';
 import { textColorOn } from '../../src/core/move-score';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -247,10 +247,10 @@ function arrowEl(a: OverlayArrow, orientation: Color): SVGGElement {
 
 /** 0–100 score next to the arrow, before the head. */
 function badgeEl(a: OverlayArrow, orientation: Color): SVGGElement {
-  const { badge } = arrowShape(squareCenter(a.from, orientation), squareCenter(a.to, orientation), a.accent);
+  const { badge, badgeBox: box } = arrowShape(squareCenter(a.from, orientation), squareCenter(a.to, orientation), a.accent, String(a.score));
   const g = svgEl('g', { class: 'badge' });
   g.append(
-    svgEl('circle', { cx: String(badge.x), cy: String(badge.y), r: String(ARROW.badgeRadius), fill: a.color, stroke: 'rgba(0,0,0,.35)', 'stroke-width': '0.02' }),
+    svgEl('rect', { x: String(box.x), y: String(box.y), width: String(box.width), height: String(box.height), rx: String(box.radius), fill: a.color, stroke: 'rgba(0,0,0,.35)', 'stroke-width': '0.02' }),
     svgEl('text', { x: String(badge.x), y: String(badge.y + 0.005), fill: textColorOn(a.color), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, String(a.score)),
   );
   return g;

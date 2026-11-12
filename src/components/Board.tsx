@@ -3,7 +3,7 @@ import type { Square } from 'chess.js';
 import type { BoardPiece } from '../services/board.service';
 import { pieceImage } from './pieces';
 import type { CandidateArrow, PvMark } from '../core/analysis.manager';
-import { ARROW, arrowShape, pointsAttr, squareCenter } from '../core/arrow-geometry';
+import { arrowShape, pointsAttr, squareCenter } from '../core/arrow-geometry';
 import { textColorOn } from '../core/move-score';
 import { trackPieces, type TrackedPiece } from '../core/piece-tracking';
 import { useBoardTheme, useI18n } from '../hooks/useAnalysis';
@@ -286,11 +286,12 @@ interface ArrowProps {
  * arrow has the same opacity.
  */
 function Arrow({ arrow, orientation, part }: ArrowProps) {
-  const shape = arrowShape(squareCenter(arrow.from, orientation), squareCenter(arrow.to, orientation), arrow.accent);
+  const shape = arrowShape(squareCenter(arrow.from, orientation), squareCenter(arrow.to, orientation), arrow.accent, String(arrow.score));
   if (part === 'badge') {
+    const box = shape.badgeBox;
     return (
       <g className="arrow-badge" pointerEvents="none">
-        <circle cx={shape.badge.x} cy={shape.badge.y} r={ARROW.badgeRadius} fill={arrow.color} stroke="rgba(0,0,0,.35)" strokeWidth={0.02} />
+        <rect x={box.x} y={box.y} width={box.width} height={box.height} rx={box.radius} fill={arrow.color} stroke="rgba(0,0,0,.35)" strokeWidth={0.02} />
         <text x={shape.badge.x} y={shape.badge.y + 0.005} fill={textColorOn(arrow.color)} textAnchor="middle" dominantBaseline="central">
           {arrow.score}
         </text>
