@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.7.1] — New arrow style
 
 ### Changed
 - **Arrows** were restyled: a thin line (7–9% of a square) starting at a small ring on the source square, a compact head with rounded corners that stops 0.3 squares before the target centre, and rounded frames around the source and target squares of the best/selected move (the target frame is lightly filled). Score badges are now small rectangles with slightly rounded corners, sized to the number of digits, centred on the line just before the head.
@@ -141,6 +141,7 @@ Expanded opening book and granular trainer categories.
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.7.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.1
 [0.7.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.0
 [0.6.2]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.2
 [0.6.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.1
