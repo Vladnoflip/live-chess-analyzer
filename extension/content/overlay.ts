@@ -232,7 +232,7 @@ function arrowEl(a: OverlayArrow, orientation: Color): SVGGElement {
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',
     }),
-    svgEl('polygon', { points: pointsAttr(shape.head), fill: a.color, stroke: a.color, 'stroke-width': '0.06', 'stroke-linejoin': 'round' }),
+    svgEl('path', { d: shape.headPath, fill: a.color }),
   );
   return g;
 }

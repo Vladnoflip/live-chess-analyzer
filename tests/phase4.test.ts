@@ -3,7 +3,7 @@ import { DrillManager, DRILL_STORAGE_KEY, type KeyValueStorage } from '../src/co
 import { OpeningBook } from '../src/core/openings';
 import { BoardService, START_FEN } from '../src/services/board.service';
 import { scoreToStepColor, textColorOn, BRILLIANT_COLOR } from '../src/core/move-score';
-import { arrowShape, squareCenter } from '../src/core/arrow-geometry';
+import { ARROW, arrowShape, squareCenter } from '../src/core/arrow-geometry';
 import { translateMsg } from '../src/core/i18n';
 
 const board = new BoardService();
@@ -174,6 +174,43 @@ describe('arrow geometry', () => {
     expect(s.shaft[1]).toEqual({ x: 6.5, y: 5.5 }); // corner on g3: two squares up, then left
     const h = arrowShape(squareCenter('b1', 'w'), squareCenter('d2', 'w'), false);
     expect(h.shaft[1]).toEqual({ x: 3.5, y: 7.5 }); // corner on d1: two squares right, then up
+  });
+
+  it('keeps a gap between the tip and the target centre', () => {
+    const pairs = [
+      ['e2', 'e4'],
+      ['g1', 'f3'],
+      ['a1', 'h8'],
+      ['h7', 'b1'],
+    ] as const;
+    for (const [from, to] of pairs) {
+      for (const accent of [true, false]) {
+        const target = squareCenter(to, 'w');
+        const s = arrowShape(squareCenter(from, 'w'), target, accent);
+        const gap = Math.hypot(s.head[0].x - target.x, s.head[0].y - target.y);
+        expect(gap).toBeCloseTo(ARROW.tipGap, 5);
+        expect(gap).toBeGreaterThanOrEqual(0.18);
+      }
+    }
+  });
+
+  it('uses shafts 20–25% of a square wide and a rounded head path', () => {
+    for (const accent of [true, false]) {
+      const s = arrowShape(squareCenter('e2', 'w'), squareCenter('e4', 'w'), accent);
+      expect(s.width).toBeGreaterThanOrEqual(0.2);
+      expect(s.width).toBeLessThanOrEqual(0.25);
+      // Three rounded corners: one move, three curves, closed.
+      expect(s.headPath.match(/Q/g)).toHaveLength(3);
+      expect(s.headPath.startsWith('M')).toBe(true);
+      expect(s.headPath.endsWith('Z')).toBe(true);
+      expect(s.headPath).not.toMatch(/NaN/);
+    }
+  });
+
+  it('starts the round tail just off the source centre', () => {
+    const from = squareCenter('e2', 'w');
+    const s = arrowShape(from, squareCenter('e4', 'w'), false);
+    expect(Math.hypot(s.shaft[0]!.x - from.x, s.shaft[0]!.y - from.y)).toBeCloseTo(ARROW.tailGap, 5);
   });
 
   it('accent arrows are wider (opacity is handled by CSS and is the same for all)', () => {

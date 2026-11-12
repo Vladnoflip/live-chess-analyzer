@@ -283,7 +283,7 @@ function Arrow({ arrow, orientation, part }: ArrowProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <polygon points={pointsAttr(shape.head)} fill={arrow.color} stroke={arrow.color} strokeWidth={0.06} strokeLinejoin="round" />
+      <path d={shape.headPath} fill={arrow.color} />
     </g>
   );
 }

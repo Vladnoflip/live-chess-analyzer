@@ -1,6 +1,8 @@
 /**
  * Arrow shapes on an 8×8 board in square units (one square = 1). Shared by the app
- * board and the extension overlay so both draw identical arrows.
+ * board, the trainer site and the extension overlay, so all of them draw identical
+ * arrows: a shaft with a round tail (bent for knight moves) and a head with softly
+ * rounded corners whose tip stops short of the target square's centre.
  */
 export interface Point {
   readonly x: number;
@@ -8,14 +10,31 @@ export interface Point {
 }
 
 export interface ArrowShape {
-  /** Shaft polyline (2 points, or 3 for a knight's L-shaped arrow). */
+  /** Shaft polyline (2 points, or 3 for a knight's L-shaped arrow); stroke it with round caps and joins. */
   readonly shaft: readonly Point[];
-  /** Arrowhead triangle. */
+  /** Arrowhead triangle: tip, then the two base corners. */
   readonly head: readonly [Point, Point, Point];
+  /** SVG path data of the head with rounded corners; fill it, no stroke. */
+  readonly headPath: string;
   /** Where the score badge goes: on the shaft, before the head. */
   readonly badge: Point;
+  /** Shaft width in squares. */
   readonly width: number;
 }
+
+/** Arrow proportions in squares. Shaft widths are 20–24% of a square. */
+export const ARROW = {
+  width: { normal: 0.2, accent: 0.24 },
+  headLength: { normal: 0.44, accent: 0.5 },
+  headHalfWidth: { normal: 0.26, accent: 0.3 },
+  /** Distance from the target centre to the tip, so the piece stays visible. */
+  tipGap: 0.2,
+  /** The tail starts this far from the source centre (the round cap adds width/2). */
+  tailGap: 0.08,
+  /** Corner rounding of the head as a fraction of the adjacent edges. */
+  tipRounding: 0.1,
+  baseRounding: 0.18,
+} as const;
 
 /** Centre of a square in board coordinates for the given orientation. */
 export function squareCenter(square: string, orientation: 'w' | 'b'): Point {
@@ -25,9 +44,10 @@ export function squareCenter(square: string, orientation: 'w' | 'b'): Point {
 }
 
 export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape {
-  const width = accent ? 0.2 : 0.13;
-  const headLen = accent ? 0.46 : 0.36;
-  const headHalf = accent ? 0.27 : 0.21;
+  const kind = accent ? 'accent' : 'normal';
+  const width = ARROW.width[kind];
+  const headLen = ARROW.headLength[kind];
+  const headHalf = ARROW.headHalfWidth[kind];
 
   const dx = to.x - from.x;
   const dy = to.y - from.y;
@@ -43,30 +63,59 @@ export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape 
   const uy = ly / len;
 
   // Tip stops short of the centre so the target piece stays visible.
-  const tip = { x: to.x - ux * 0.16, y: to.y - uy * 0.16 };
+  const tip = { x: to.x - ux * ARROW.tipGap, y: to.y - uy * ARROW.tipGap };
   const base = { x: tip.x - ux * headLen, y: tip.y - uy * headLen };
   const head: [Point, Point, Point] = [
     tip,
     { x: base.x - uy * headHalf, y: base.y + ux * headHalf },
     { x: base.x + uy * headHalf, y: base.y - ux * headHalf },
   ];
-  // Shaft starts slightly off the source centre and runs into the head's base.
+
+  // Round tail just off the source centre; the shaft runs a little into the head so
+  // there is no seam (arrows use group opacity, so the overlap doesn't darken).
   const sx = (corner ?? to).x - from.x;
   const sy = (corner ?? to).y - from.y;
   const slen = Math.hypot(sx, sy) || 1;
-  const start = { x: from.x + (sx / slen) * 0.12, y: from.y + (sy / slen) * 0.12 };
-  const shaftEnd = { x: base.x + ux * 0.05, y: base.y + uy * 0.05 };
+  const start = { x: from.x + (sx / slen) * ARROW.tailGap, y: from.y + (sy / slen) * ARROW.tailGap };
+  const shaftEnd = { x: base.x + ux * 0.1, y: base.y + uy * 0.1 };
   const shaft = corner ? [start, corner, shaftEnd] : [start, shaftEnd];
 
   // Badge sits on the last segment, 0.32 squares before the head (or mid-way on short arrows).
   const segLen = Math.hypot(base.x - lastFrom.x, base.y - lastFrom.y);
   const back = Math.min(0.32, segLen / 2);
   const badge = { x: base.x - ux * back, y: base.y - uy * back };
-  return { shaft, head, badge, width };
+  return { shaft, head, headPath: roundedTrianglePath(head), badge, width };
+}
+
+/**
+ * Closed path through a triangle whose corners are replaced by quadratic curves.
+ * The tip is rounded less than the base corners, so the arrow still looks sharp.
+ */
+export function roundedTrianglePath(points: readonly [Point, Point, Point]): string {
+  const rounding = [ARROW.tipRounding, ARROW.baseRounding, ARROW.baseRounding];
+  const parts: string[] = [];
+  for (let i = 0; i < 3; i++) {
+    const v = points[i] as Point;
+    const prev = points[(i + 2) % 3] as Point;
+    const next = points[(i + 1) % 3] as Point;
+    const t = rounding[i] as number;
+    const a = lerp(v, prev, t);
+    const b = lerp(v, next, t);
+    parts.push(`${i === 0 ? 'M' : 'L'}${fmt(a)}Q${fmt(v)} ${fmt(b)}`);
+  }
+  return `${parts.join('')}Z`;
 }
 
 export function pointsAttr(points: readonly Point[]): string {
   return points.map((p) => `${round(p.x)},${round(p.y)}`).join(' ');
+}
+
+function lerp(a: Point, b: Point, t: number): Point {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+function fmt(p: Point): string {
+  return `${round(p.x)} ${round(p.y)}`;
 }
 
 function round(n: number): number {
