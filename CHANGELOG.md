@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.2] — Extension diagnostics and safer content script
+
+A report said the extension showed nothing after updating to 0.7.x. No crash could be reproduced: the 0.7.1 build draws the overlay on the live `lichess.org/analysis` page with no exceptions, the fixture e2e suite passes, and every file referenced by the manifest exists. chess.com could not be tested live (it answers automated browsers with 403). The most likely causes are on the installation side: a self-packed `.crx` (Chrome on Windows and macOS disables off-store `.crx` extensions), or a Chrome profile still running the previous build (every build gives the scripts new hashed names, so the old manifest points to files that no longer exist). This release makes such failures visible and keeps the content script running.
+
+### Fixed
+- **Content script resilience.** An exception in one polling tick is caught and logged instead of failing silently, and the overlay keeps running. Start-up failures (for example, settings that cannot be read) are logged too. Draw detection is guarded, so it can never stop the overlay.
+
+### Added
+- **Diagnostics.** The content script logs `[LiveChess Analyzer] content script v… loaded on …` to the page console. Every extension error is logged once with that prefix and the version. The overlay host exposes `data-version`.
+- **E2E checks.** The suite now fails on any uncaught exception or extension console error in any context (page, content script, service worker, offscreen document, popup, trainer). It also checks that every file referenced by the built manifest exists (including the bundle the content-script loader imports), that the manifest version matches `package.json`, and that the content script announced itself. A deliberately injected crash in the content script makes the suite fail (checked manually).
+- `npm run smoke:lichess`: a manual smoke test on the live lichess analysis board.
+- README: a *Troubleshooting* section: install with *Load unpacked* (not a `.crx` or `.zip`), reload after every build, and read the logs (`chrome://extensions` → *Inspect views*).
+- `.gitignore` excludes `*.crx`, `*.pem` and `dist-extension.zip`, so a packing key is never committed.
+
 ## [0.7.1] — New arrow style
 
 ### Changed
@@ -141,6 +155,7 @@ Expanded opening book and granular trainer categories.
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.7.2]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.2
 [0.7.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.1
 [0.7.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.0
 [0.6.2]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.2

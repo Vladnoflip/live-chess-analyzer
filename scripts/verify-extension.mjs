@@ -67,6 +67,21 @@ const scoreToColor = (score) => STEPS.find(([min]) => score >= min)[1];
 // ── static checks of the built extension ─────────────────────────────────
 {
   const manifest = JSON.parse(readFileSync(join(extPath, 'manifest.json'), 'utf8'));
+  const refs = [
+    manifest.background?.service_worker,
+    manifest.action?.default_popup,
+    ...(manifest.content_scripts ?? []).flatMap((c) => [...(c.js ?? []), ...(c.css ?? [])]),
+    ...Object.values(manifest.icons ?? {}),
+    ...(manifest.web_accessible_resources ?? []).flatMap((w) => w.resources.filter((r) => !r.includes('*'))),
+  ].filter(Boolean);
+  // The content-script loader imports the real bundle by URL; that file must exist too.
+  for (const js of (manifest.content_scripts ?? []).flatMap((c) => c.js ?? [])) {
+    const loader = readFileSync(join(extPath, js), 'utf8');
+    for (const m of loader.matchAll(/getURL\("([^"]+)"\)/g)) refs.push(m[1]);
+  }
+  const missingFiles = refs.filter((r) => { try { statSync(join(extPath, r)); return false; } catch { return true; } });
+  check('every file referenced by the manifest exists', refs.length > 3 && missingFiles.length === 0, missingFiles.join(', ') || `${refs.length} files`);
+  check('manifest version matches package.json', manifest.version === JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version, manifest.version);
   check('manifest permissions are only storage + offscreen', JSON.stringify([...manifest.permissions].sort()) === '["offscreen","storage"]', JSON.stringify(manifest.permissions));
   const files = [];
   const walk = (dir) => {
@@ -89,10 +104,38 @@ const browser = await puppeteer.launch({
   defaultViewport: { width: 1000, height: 720 },
 });
 
+// Uncaught exceptions anywhere (page incl. the content script's isolated world, service
+// worker, offscreen document, popup, trainer) and console errors from the extension.
+const runtimeErrors = [];
+const contentInfo = [];
+const watch = async (target) => {
+  // The service worker is watched through puppeteer's own session below (a second session closes it).
+  if (!['page', 'other'].includes(target.type())) return;
+  try {
+    const session = await target.createCDPSession();
+    const where = `${target.type()} ${target.url().replace(/^chrome-extension:\/\/[^/]+/, 'ext:')}`;
+    session.on('Runtime.exceptionThrown', (e) => runtimeErrors.push(`${where}: ${e.exceptionDetails.exception?.description ?? e.exceptionDetails.text}`));
+    session.on('Runtime.consoleAPICalled', (e) => {
+      const text = e.args.map((a) => a.value ?? a.description ?? '').join(' ');
+      if (text.includes('[LiveChess Analyzer] content script v')) contentInfo.push(text);
+      if (e.type === 'error' && (target.url().startsWith('chrome-extension://') || text.includes('[LiveChess Analyzer]'))) runtimeErrors.push(`${where}: console.error ${text}`);
+    });
+    await session.send('Runtime.enable');
+  } catch {
+    // Target closed before we could attach.
+  }
+};
+browser.on('targetcreated', watch);
+for (const t of browser.targets()) await watch(t);
+
 try {
   const swTarget = await browser.waitForTarget((t) => t.type() === 'service_worker' && t.url().startsWith('chrome-extension://'));
   const sw = await swTarget.worker();
   check('service worker started', !!sw);
+  sw.client.on('Runtime.exceptionThrown', (e) => runtimeErrors.push(`service_worker: ${e.exceptionDetails.exception?.description ?? e.exceptionDetails.text}`));
+  sw.client.on('Runtime.consoleAPICalled', (e) => {
+    if (e.type === 'error') runtimeErrors.push(`service_worker: console.error ${e.args.map((a) => a.value ?? a.description ?? '').join(' ')}`);
+  });
   const extId = new URL(swTarget.url()).host;
   // Right after start-up the worker may not expose chrome.storage yet.
   for (let i = 0; i < 50 && !(await sw.evaluate(() => typeof chrome !== 'undefined' && !!chrome.storage)); i++) await sleep(100);
@@ -313,6 +356,9 @@ try {
   await sleep(1500);
   s = await state();
   check('chess.com /game/live: overlay not shown', s.shown !== 'visible', s.shown);
+
+  check('content script announced itself in the page console', contentInfo.some((t) => t.includes(`v${JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version}`)), contentInfo[0] ?? 'no message');
+  check('no uncaught exceptions or extension console errors in any context', runtimeErrors.length === 0, runtimeErrors.slice(0, 5).join(' | '));
 } finally {
   await browser.close();
 }

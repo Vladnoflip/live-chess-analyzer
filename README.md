@@ -117,6 +117,7 @@ npm install
 | `npm run build:extension` | Build the unpacked extension into `dist-extension/` |
 | `npm test` | Unit and integration tests (Vitest; the integration tests run the real Stockfish WASM in Node) |
 | `npm run test:extension` | Build the extension and run the end-to-end suite in Chrome for Testing (Puppeteer) on local fixture pages |
+| `npm run smoke:lichess` | Manual smoke test on the **live** lichess analysis board (needs `npm run build:extension` and network; not run in CI) |
 | `npm run screenshots` | Re-capture `docs/screenshots/` (needs `npm run build` and `npm run build:extension` first) |
 | `npm run build-openings` | Regenerate `src/data/openings/openings.json` from the TSV files |
 
@@ -129,7 +130,19 @@ Puppeteer's install script downloads Chrome for Testing (~150 MB) into the user 
 3. Turn on **Developer mode** (top right).
 4. Click **Load unpacked** and select the `dist-extension/` folder.
 
-After a rebuild, press the reload icon on the extension card.
+After a rebuild, press the reload icon on the extension card **and refresh the chess tabs**.
+
+### Troubleshooting: the overlay does not appear
+
+1. **Install with *Load unpacked*, not as a .crx or .zip.** Select the `dist-extension/` folder itself. Chrome on Windows and macOS disables self-packed `.crx` files that are not from the Chrome Web Store (the card says the extension is not listed in the store), so nothing runs; a `.zip` cannot be loaded at all. A packed copy also gets a different extension ID, so its settings start from scratch.
+2. **Rebuild, reload, refresh.** Every build empties `dist-extension/` and gives the scripts new hashed file names. If Chrome still runs the previous build, it looks for files that no longer exist and the content script does not load on any page. Run `npm run build:extension`, press the reload icon on the extension card in `chrome://extensions`, then refresh the chess tab (tabs opened before the reload keep the old, disconnected script).
+3. **Check the card in `chrome://extensions`.** An *Errors* button on the card lists errors from every part of the extension. The version on the card must match `package.json`.
+4. **Content script (the page).** Open the chess page, press F12, *Console* tab. You should see `[LiveChess Analyzer] content script v… loaded on …`. If it is missing, the content script did not load (see steps 1–2). Errors from the extension are prefixed with `[LiveChess Analyzer]`. To see only the extension's messages, pick *LiveChess Analyzer* in the context drop-down at the top of the Console (default: *top*).
+5. **Service worker and engine.** In `chrome://extensions`, turn on *Developer mode*. On the extension card, under *Inspect views*, click *service worker* (messages between the page and the engine) and *extension/offscreen.html* (Stockfish). The offscreen entry appears after the first analysis request.
+6. **Overlay state without DevTools.** In the page console, run `document.querySelector('livechess-analyzer-overlay')?.dataset`. `status` is `done` once the engine answered, `arrows` is the number of arrows, `version` is the running version. `null` means the page is not an allowed page or the board was not found.
+7. **Allowed pages only.** The overlay never appears on live games against people, lichess game pages or TV. On chess.com it needs `/analysis` or `/play/computer` **and** the matching board element (see [Fair Play & Legality](#fair-play--legality)).
+
+`npm run smoke:lichess` loads the built extension into Chrome for Testing, opens the live `lichess.org/analysis` page and reports the overlay state and any errors. chess.com cannot be checked this way: it answers automated browsers with 403.
 
 ## Project structure
 

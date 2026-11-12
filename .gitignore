@@ -11,6 +11,11 @@ public/engine/
 
 # Local screenshots produced by the e2e run (docs/screenshots/ is committed)
 e2e-screenshots/
+smoke-lichess.png
+# Packed builds and the packing key (never commit the private key)
+*.crx
+*.pem
+dist-extension.zip
 
 # Puppeteer / Chrome for Testing (~150 MB) and test browser profiles
 .cache/

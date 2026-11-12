@@ -18,7 +18,23 @@ const POLL_MS = 150;
 const DEBOUNCE_MS = 200;
 
 const platform = platformFor(location.hostname);
-if (platform) void start();
+const VERSION = chrome.runtime.getManifest().version;
+const LOG_PREFIX = '[LiveChess Analyzer]';
+
+/** Each distinct error is logged once, so a failing tick can't flood the console or fail silently. */
+const reported = new Set<string>();
+function report(where: string, e: unknown): void {
+  const text = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  const key = `${where}|${text}`;
+  if (reported.has(key)) return;
+  reported.add(key);
+  console.error(`${LOG_PREFIX} ${where} failed (v${VERSION}):`, e);
+}
+
+if (platform) {
+  console.info(`${LOG_PREFIX} content script v${VERSION} loaded on ${location.hostname} (overlay only on analysis boards and bot games)`);
+  start().catch((e: unknown) => report('start', e));
+}
 
 async function start(): Promise<void> {
   const p = platform!;
@@ -125,7 +141,13 @@ async function start(): Promise<void> {
         : [];
     if (fen !== drawFen) {
       drawFen = fen;
-      isDrawn = fen ? boardService.isDraw(fen) : false;
+      try {
+        isDrawn = fen ? boardService.isDraw(fen) : false;
+      } catch (e) {
+        // Draw detection is cosmetic (grey bar); never let it break the overlay.
+        isDrawn = false;
+        report('draw detection', e);
+      }
     }
     const opening = settings.showOpening && book && fen && book.inBook(fen) ? book.openingAt(fen) : null;
     overlay.render({
@@ -145,8 +167,16 @@ async function start(): Promise<void> {
     });
   };
 
-  const timer = setInterval(tick, POLL_MS);
-  tick();
+  // One bad frame (odd DOM mid-animation, an unexpected position) must not stop the overlay.
+  const safeTick = () => {
+    try {
+      tick();
+    } catch (e) {
+      report('tick', e);
+    }
+  };
+  const timer = setInterval(safeTick, POLL_MS);
+  safeTick();
 }
 
 function squares(uci: string): { from: Square; to: Square } {

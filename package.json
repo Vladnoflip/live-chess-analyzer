@@ -1,6 +1,6 @@
 {
   "name": "livechess-analyzer",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "description": "Local chess analysis with Stockfish 18 WASM: MultiPV analyzer, 0-100 move scoring, openings explorer and trainer, and a Chrome MV3 extension that works only against bots and on analysis pages.",
   "license": "GPL-3.0-only",
@@ -29,6 +29,7 @@
     "test:integration": "vitest run tests/engine.integration.test.ts",
     "build:extension": "npm run copy-engine && tsc --noEmit && vite build --config vite.config.extension.ts",
     "test:extension": "npm run build:extension && node scripts/verify-extension.mjs",
+    "smoke:lichess": "node scripts/smoke-lichess.mjs",
     "build-openings": "node scripts/build-openings.mjs",
     "screenshots": "node scripts/screenshots.mjs"
   },

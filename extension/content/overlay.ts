@@ -139,6 +139,7 @@ export class Overlay {
     d.opening = state.opening ?? '';
     d.font = state.font;
     d.draw = state.draw ? '1' : '';
+    d.version = chrome.runtime.getManifest().version;
 
     const barLeft = rect.left >= BAR_WIDTH + BAR_GAP ? rect.left - BAR_WIDTH - BAR_GAP : rect.left + 2;
     place(this.bar, barLeft, rect.top, BAR_WIDTH, rect.height);
