@@ -5,6 +5,7 @@ import type { AnalysisState } from './core/analysis.manager';
 import type { MessageKey, MessageParams } from './core/i18n';
 import { START_FEN, boardService } from './services/board.service';
 import { exportAnnotatedPgn, pgnFileName } from './core/pgn-export';
+import { mistakeHeatmap } from './core/heatmap';
 import { downloadText } from './components/download';
 import { Board } from './components/Board';
 import { EvalBar } from './components/EvalBar';
@@ -41,6 +42,7 @@ export function App() {
   }, [locale]);
   const [flipped, setFlipped] = useState(false);
   const [mode, setMode] = useState<Mode>('analysis');
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   // state.fen is a deliberate dependency: the manager methods read the current position.
   const pieces = useMemo(() => manager.pieces(), [manager, state.fen]);
@@ -56,6 +58,8 @@ export function App() {
   const bookPlies = useMemo(() => explorer.bookPlies(state.moves), [explorer, explorerState.status, state.moves]);
 
   const drilling = mode === 'drill' && drillState.status !== 'idle';
+  const heatmap = useMemo(() => mistakeHeatmap(state.moves, state.classes), [state.moves, state.classes]);
+  const heatmapVisible = showHeatmap && mode === 'analysis' && Object.keys(state.classes).length > 0;
   const hintsHidden = drilling && !drillState.hintsVisible;
 
   useEffect(() => {
@@ -130,6 +134,7 @@ export function App() {
               arrows={hintsHidden ? [] : manager.candidateArrows()}
               pvMarks={hintsHidden ? [] : manager.pvPreview()}
               lastMove={manager.lastMove()}
+              heatmap={heatmapVisible ? heatmap : undefined}
               targetsFrom={targetsFrom}
               onMove={onBoardMove}
             />
@@ -196,6 +201,7 @@ export function App() {
             onSelect={(ply) => !drilling && manager.goTo(ply)}
             onReview={() => void manager.reviewGame()}
             onCancelReview={() => manager.cancelReview()}
+            heatmap={mode === 'analysis' ? { on: showHeatmap, squares: heatmap.length, onToggle: setShowHeatmap } : undefined}
             onExport={() => downloadText(pgnFileName(state.headers), exportAnnotatedPgn(state, boardService, text))}
           />
           {mode === 'analysis' && (

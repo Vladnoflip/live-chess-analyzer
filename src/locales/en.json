@@ -271,5 +271,9 @@
   "theme.classic": "Classic",
   "theme.wood": "Wood",
   "theme.neon": "Neon",
-  "theme.soft": "Soft"
+  "theme.soft": "Soft",
+  "heatmap.show": "Show heatmap",
+  "heatmap.hint": "Colours the squares where mistakes and blunders were played: the more often, the redder",
+  "heatmap.squares": "squares with errors: {n}",
+  "heatmap.none": "no mistakes or blunders"
 }

@@ -280,6 +280,21 @@ textarea.invalid {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+.heat-count {
+  font: 700 0.17px system-ui, sans-serif;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: rgba(120, 0, 0, 0.7);
+  stroke-width: 0.03px;
+  pointer-events: none;
+}
+.heatmap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+}
 .moves-actions {
   display: inline-flex;
   gap: 6px;

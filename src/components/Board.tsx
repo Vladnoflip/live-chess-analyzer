@@ -8,6 +8,7 @@ import { textColorOn } from '../core/move-score';
 import { trackPieces, type TrackedPiece } from '../core/piece-tracking';
 import { useBoardTheme, useI18n } from '../hooks/useAnalysis';
 import { boardThemeVars } from '../core/board-themes';
+import { heatColor, type HeatCell } from '../core/heatmap';
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
 /** Slide duration for moves, ms. */
@@ -21,6 +22,8 @@ export interface BoardProps {
   arrows: readonly CandidateArrow[];
   pvMarks: readonly PvMark[];
   lastMove: { from: Square; to: Square } | null;
+  /** Mistake heatmap cells drawn under the pieces (review mode). */
+  heatmap?: readonly HeatCell[];
   targetsFrom(square: Square): Square[];
   onMove(from: Square, to: Square): void;
 }
@@ -43,7 +46,7 @@ interface Drag {
  * yours, the engine's, or stepping through a game — slides the piece instead of
  * teleporting it. A piece dropped by hand lands instantly; only other moves animate.
  */
-export function Board({ pieces, flipped, arrows, pvMarks, lastMove, targetsFrom, onMove }: BoardProps) {
+export function Board({ pieces, flipped, arrows, pvMarks, lastMove, heatmap, targetsFrom, onMove }: BoardProps) {
   const { t } = useI18n();
   const { theme } = useBoardTheme();
   const [selected, setSelected] = useState<Square | null>(null);
@@ -174,6 +177,22 @@ export function Board({ pieces, flipped, arrows, pvMarks, lastMove, targetsFrom,
           </g>
         );
       })}
+
+      {heatmap && heatmap.length > 0 && (
+        <g className="heatmap" pointerEvents="none">
+          {heatmap.map((cell) => {
+            const { x, y } = coords(cell.square);
+            return (
+              <g key={cell.square} data-heat={cell.count}>
+                <rect x={x} y={y} width={1} height={1} fill={heatColor(cell.intensity)} />
+                <text x={x + 0.94} y={y + 0.22} className="heat-count" textAnchor="end">
+                  {cell.count}
+                </text>
+              </g>
+            );
+          })}
+        </g>
+      )}
 
       {/* Coordinates on the edge squares */}
       {FILES.map((f, i) => (

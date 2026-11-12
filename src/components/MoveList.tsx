@@ -19,9 +19,11 @@ export interface MoveListProps {
   onCancelReview(): void;
   /** Downloads the annotated PGN; enabled once at least part of the game is reviewed. */
   onExport?: () => void;
+  /** Heatmap toggle; shown once the game has been reviewed. */
+  heatmap?: { readonly on: boolean; readonly squares: number; onToggle(on: boolean): void };
 }
 
-export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, onSelect, onReview, onCancelReview, onExport }: MoveListProps) {
+export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, onSelect, onReview, onCancelReview, onExport, heatmap }: MoveListProps) {
   const { t } = useI18n();
   const activeRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -126,6 +128,13 @@ export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, o
             </li>
           ))}
         </ul>
+      )}
+      {heatmap && Object.keys(classes).length > 0 && (
+        <label className="toggle heatmap-toggle" title={t('heatmap.hint')}>
+          <input type="checkbox" checked={heatmap.on} onChange={(e) => heatmap.onToggle(e.target.checked)} />
+          {t('heatmap.show')}
+          {heatmap.on && <span className="muted small-text"> · {heatmap.squares === 0 ? t('heatmap.none') : t('heatmap.squares', { n: heatmap.squares })}</span>}
+        </label>
       )}
     </section>
   );
