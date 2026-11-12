@@ -211,6 +211,75 @@ textarea.invalid {
   top: 4px;
   color: #eee;
 }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.network-warning {
+  margin: 0 0 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 196, 0, 0.45);
+  background: rgba(255, 196, 0, 0.08);
+  color: #f0d78a;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.lichess-form {
+  gap: 6px;
+}
+.lichess-user {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #3a3f47);
+  background: var(--input-bg, #15181d);
+  color: inherit;
+  font: inherit;
+}
+.lichess-games {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.lichess-games li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px;
+  border-radius: 6px;
+}
+.lichess-games li.active {
+  background: rgba(255, 255, 255, 0.06);
+}
+.lichess-game {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  min-width: 0;
+}
+.lichess-players {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.lichess-summary {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
 .moves-actions {
   display: inline-flex;
   gap: 6px;

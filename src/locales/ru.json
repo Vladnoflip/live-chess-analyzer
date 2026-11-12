@@ -248,5 +248,22 @@
   "pgn.exportHint": "Скачать партию с оценками ходов и движка в комментариях",
   "pgn.exportNeedsReview": "Сначала разберите партию, чтобы экспортировать её с аннотациями",
   "pgn.brilliant": "Блестящий ход",
-  "pgn.bestWas": "Лучше было {san}"
+  "pgn.bestWas": "Лучше было {san}",
+  "lichess.title": "Импорт с Lichess",
+  "lichess.username": "Имя пользователя Lichess",
+  "lichess.placeholder": "ник",
+  "lichess.import": "Загрузить 10 последних партий",
+  "lichess.loading": "Загрузка…",
+  "lichess.warning": "Это единственный сетевой запрос в приложении, и он необязателен: имя пользователя отправляется на lichess.org только при нажатии кнопки. Всё остальное работает локально.",
+  "lichess.reviewAll": "Разобрать все",
+  "lichess.stop": "Стоп",
+  "lichess.open": "Открыть и разобрать",
+  "lichess.summary": "?? {blunders} · ? {mistakes} · ?! {inaccuracies}",
+  "lichess.reviewing": "Разбор партии {n} из {total}…",
+  "lichess.error.invalidUser": "Введите корректное имя на lichess (2–30 букв, цифр, _ или -)",
+  "lichess.error.notFound": "Такого пользователя на lichess нет",
+  "lichess.error.rateLimited": "lichess просит не торопиться — попробуйте через минуту",
+  "lichess.error.network": "Не удалось связаться с lichess.org",
+  "lichess.error.badResponse": "Неожиданный ответ от lichess",
+  "lichess.error.noGames": "У пользователя пока нет партий"
 }

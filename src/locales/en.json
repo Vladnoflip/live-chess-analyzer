@@ -248,5 +248,22 @@
   "pgn.exportHint": "Download the game with move classifications and engine evaluations as comments",
   "pgn.exportNeedsReview": "Review the game first to export it with annotations",
   "pgn.brilliant": "Brilliant move",
-  "pgn.bestWas": "Best was {san}"
+  "pgn.bestWas": "Best was {san}",
+  "lichess.title": "Import from lichess",
+  "lichess.username": "Lichess username",
+  "lichess.placeholder": "username",
+  "lichess.import": "Load last 10 games",
+  "lichess.loading": "Loading…",
+  "lichess.warning": "This is the only network request in the app, and it is optional: the username is sent to lichess.org only when you press the button. Everything else runs locally.",
+  "lichess.reviewAll": "Review all",
+  "lichess.stop": "Stop",
+  "lichess.open": "Open and review",
+  "lichess.summary": "?? {blunders} · ? {mistakes} · ?! {inaccuracies}",
+  "lichess.reviewing": "Reviewing game {n} of {total}…",
+  "lichess.error.invalidUser": "Enter a valid lichess username (2–30 letters, digits, _ or -)",
+  "lichess.error.notFound": "No such lichess user",
+  "lichess.error.rateLimited": "lichess asks to slow down; try again in a minute",
+  "lichess.error.network": "Could not reach lichess.org",
+  "lichess.error.badResponse": "Unexpected response from lichess",
+  "lichess.error.noGames": "This user has no games yet"
 }

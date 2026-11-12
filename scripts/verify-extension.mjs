@@ -7,7 +7,7 @@
 //
 // Usage: npm run build:extension && node scripts/verify-extension.mjs [screenshotDir]
 import puppeteer from 'puppeteer';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -63,6 +63,23 @@ const ROUTES = {
 // Same steps as scoreToStepColor in src/core/move-score.ts (covered by tests/phase4.test.ts).
 const STEPS = [[90, '#00a650'], [75, '#2fe06f'], [50, '#ffd400'], [25, '#ff8a00'], [0, '#ff3b30']];
 const scoreToColor = (score) => STEPS.find(([min]) => score >= min)[1];
+
+// ── static checks of the built extension ─────────────────────────────────
+{
+  const manifest = JSON.parse(readFileSync(join(extPath, 'manifest.json'), 'utf8'));
+  check('manifest permissions are only storage + offscreen', JSON.stringify([...manifest.permissions].sort()) === '["offscreen","storage"]', JSON.stringify(manifest.permissions));
+  const files = [];
+  const walk = (dir) => {
+    for (const name of readdirSync(dir)) {
+      const p = join(dir, name);
+      if (statSync(p).isDirectory()) walk(p);
+      else if (/[.](js|html)$/.test(name)) files.push(p);
+    }
+  };
+  walk(extPath);
+  const leaking = files.filter((p) => readFileSync(p, 'utf8').includes('lichess.org/api'));
+  check('the lichess game import is not bundled into the extension', leaking.length === 0, leaking.join(', '));
+}
 
 // ── run ───────────────────────────────────────────────────────────────────
 const browser = await puppeteer.launch({

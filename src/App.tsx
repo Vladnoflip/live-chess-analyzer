@@ -11,6 +11,7 @@ import { EvalBar } from './components/EvalBar';
 import { EnginePanel } from './components/EnginePanel';
 import { MoveList } from './components/MoveList';
 import { LoadPanel } from './components/LoadPanel';
+import { LichessImportPanel } from './components/LichessImportPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { VariantsPanel } from './components/VariantsPanel';
 import { OpeningExplorerPanel } from './components/OpeningExplorerPanel';
@@ -209,6 +210,7 @@ export function App() {
                 onLiveModeChange={(on) => manager.setLiveMode(on)}
                 onPgnLoad={(pgn) => manager.loadPgn(pgn)}
               />
+              <LichessImportPanel />
               <SettingsPanel
                 settings={state.settings}
                 maxThreads={state.maxThreads}
