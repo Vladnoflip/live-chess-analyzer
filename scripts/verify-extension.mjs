@@ -61,7 +61,7 @@ const ROUTES = {
 };
 
 // Same steps as scoreToStepColor in src/core/move-score.ts (covered by tests/phase4.test.ts).
-const STEPS = [[90, '#00ff9d'], [75, '#b6ff3b'], [50, '#ffee32'], [25, '#ff9f1c'], [0, '#ff2e63']];
+const STEPS = [[90, '#1fbf5a'], [75, '#7bdc4f'], [50, '#ffd93d'], [25, '#ff9a2e'], [0, '#ff4d4f']];
 const scoreToColor = (score) => STEPS.find(([min]) => score >= min)[1];
 
 // ── static checks of the built extension ─────────────────────────────────
@@ -190,7 +190,7 @@ try {
   await tab.goto('https://lichess.org/analysis/legal');
   s = await waitDone(20000);
   const [first, ...rest] = s.lines;
-  check('brilliant best move is blue and marked', first?.[0] === 'Nxe5' && first?.[2] === '#00e5ff', JSON.stringify(first));
+  check('brilliant best move is blue and marked', first?.[0] === 'Nxe5' && first?.[2] === '#33b8ff', JSON.stringify(first));
   check('weaker lines get step colours below 100', rest.length === 2 && rest.every(([, sc, col]) => sc < 95 && col === scoreToColor(sc)) && new Set(s.lines.map((l) => l[2])).size >= 2, JSON.stringify(rest));
   await tab.screenshot({ path: join(shotDir, 'lichess-legal-multipv.png') });
 

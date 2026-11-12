@@ -13,13 +13,13 @@ const STYLE = `
 :host { all: initial; }
 .layer { position: fixed; pointer-events: none; z-index: 2147483000; font-family: var(--lca-font, system-ui, sans-serif); font-size: calc(12px * var(--lca-scale, 1)); line-height: 1.3; }
 svg.arrows { position: fixed; pointer-events: none; overflow: visible; }
-.arrow { opacity: .95; filter: drop-shadow(0 0 .035px var(--glow, transparent)) drop-shadow(0 0 .1px var(--glow, transparent)); }
-.badge rect { filter: drop-shadow(0 0 .06px var(--glow, transparent)); }
+.arrow { opacity: .95; filter: drop-shadow(0 0 .04px color-mix(in srgb, var(--glow, transparent) 55%, transparent)); }
+.badge rect { filter: drop-shadow(0 0 .03px color-mix(in srgb, var(--glow, transparent) 50%, transparent)); }
 .arrow .frame { fill: none; stroke-width: .035px; }
 .arrow .frame.to { fill-opacity: .24; }
 .arrow .frame.from { stroke-opacity: .7; }
 .arrow .origin { fill: rgba(255,255,255,.92); }
-.arrow.glow { filter: drop-shadow(0 0 .05px var(--glow)) drop-shadow(0 0 .16px var(--glow)) drop-shadow(0 0 .24px var(--glow)); }
+.arrow.glow { filter: drop-shadow(0 0 .06px var(--glow)) drop-shadow(0 0 .12px color-mix(in srgb, var(--glow) 60%, transparent)); }
 .badge text { font: 700 .16px var(--lca-font, system-ui, sans-serif); }
 .bar { position: fixed; background: #3a3a3a; border-radius: 3px; overflow: hidden;
   display: flex; flex-direction: column-reverse; box-shadow: 0 0 0 1px rgba(0,0,0,.35); font-weight: 700; font-size: 9px; line-height: 1; }

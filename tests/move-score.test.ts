@@ -88,7 +88,7 @@ describe('scoreToColor', () => {
     [25, '#e67e22'],
     [50, '#f1c40f'],
     [75, '#2ecc71'],
-    [100, '#00e5ff'],
+    [100, '#33b8ff'],
   ])('score %d -> %s', (score, hex) => {
     expect(scoreToColor(score)).toBe(hex);
   });
@@ -100,7 +100,7 @@ describe('scoreToColor', () => {
 
   it('clamps out-of-range scores', () => {
     expect(scoreToColor(-20)).toBe('#e74c3c');
-    expect(scoreToColor(140)).toBe('#00e5ff');
+    expect(scoreToColor(140)).toBe('#33b8ff');
   });
 
   it('always uses the brilliant colour for brilliant moves', () => {
@@ -135,7 +135,7 @@ describe('MultiPV parsing of real Stockfish output', () => {
       [3, 'd6', 42, 88],
     ]);
     // Arrow/row colours use the step scale: a non-brilliant best move is dark green.
-    expect(cands.map((c) => c.color)).toEqual(['#00ff9d', '#00ff9d', '#b6ff3b']);
+    expect(cands.map((c) => c.color)).toEqual(['#1fbf5a', '#1fbf5a', '#7bdc4f']);
     expect(cands.every((c) => !c.brilliant)).toBe(true);
   });
 });
@@ -196,7 +196,7 @@ describe('explainMove', () => {
     const fen = 'rn1qkbnr/ppp2p1p/3p2p1/4p3/2B1P1b1/2N2N2/PPPP1PPP/R1BQK2R w KQkq - 0 5';
     const cands = buildCandidates(fen, [line(1, 'f3e5', cp(166)), line(2, 'd2d4', cp(104)), line(3, 'h2h3', cp(69))], boardService);
     expect(cands[0]!.brilliant).toBe(true);
-    expect(cands[0]!.color).toBe('#00e5ff');
+    expect(cands[0]!.color).toBe('#33b8ff');
     const ex = explainMove({ fen, uci: 'f3e5', candidates: cands }, boardService);
     expect(texts(ex)).toContain('Блестящий ход');
     expect(texts(ex)).not.toContain('Теряет');

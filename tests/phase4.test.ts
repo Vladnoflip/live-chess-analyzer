@@ -127,16 +127,16 @@ describe('drill progress persistence', () => {
 
 describe('arrow colour steps', () => {
   it.each([
-    [0, '#ff2e63'],
-    [24, '#ff2e63'],
-    [25, '#ff9f1c'],
-    [49, '#ff9f1c'],
-    [50, '#ffee32'],
-    [74, '#ffee32'],
-    [75, '#b6ff3b'],
-    [89, '#b6ff3b'],
-    [90, '#00ff9d'],
-    [100, '#00ff9d'],
+    [0, '#ff4d4f'],
+    [24, '#ff4d4f'],
+    [25, '#ff9a2e'],
+    [49, '#ff9a2e'],
+    [50, '#ffd93d'],
+    [74, '#ffd93d'],
+    [75, '#7bdc4f'],
+    [89, '#7bdc4f'],
+    [90, '#1fbf5a'],
+    [100, '#1fbf5a'],
   ])('score %d -> %s', (score, hex) => {
     expect(scoreToStepColor(score)).toBe(hex);
   });
@@ -148,9 +148,9 @@ describe('arrow colour steps', () => {
 
   it('picks readable badge text', () => {
     expect(textColorOn('#1b1b1b')).toBe('#ffffff'); // dark background
-    expect(textColorOn('#ffee32')).toBe('#1b1b1b'); // yellow
-    expect(textColorOn('#00ff9d')).toBe('#1b1b1b'); // vivid green
-    expect(textColorOn('#00e5ff')).toBe('#1b1b1b'); // blue
+    expect(textColorOn('#ffd93d')).toBe('#1b1b1b'); // yellow
+    expect(textColorOn('#1fbf5a')).toBe('#1b1b1b'); // vivid green
+    expect(textColorOn('#33b8ff')).toBe('#1b1b1b'); // blue
   });
 });
 

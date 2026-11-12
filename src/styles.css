@@ -611,13 +611,13 @@ button.primary {
 }
 .arrow-g {
   opacity: 0.95;
-  filter: drop-shadow(0 0 0.035px var(--glow, transparent)) drop-shadow(0 0 0.1px var(--glow, transparent));
+  filter: drop-shadow(0 0 0.04px color-mix(in srgb, var(--glow, transparent) 55%, transparent));
 }
 .arrow-g.glow {
-  filter: drop-shadow(0 0 0.05px var(--glow)) drop-shadow(0 0 0.16px var(--glow)) drop-shadow(0 0 0.24px var(--glow));
+  filter: drop-shadow(0 0 0.06px var(--glow)) drop-shadow(0 0 0.12px color-mix(in srgb, var(--glow) 60%, transparent));
 }
 .arrow-badge rect {
-  filter: drop-shadow(0 0 0.06px var(--glow, transparent));
+  filter: drop-shadow(0 0 0.03px color-mix(in srgb, var(--glow, transparent) 50%, transparent));
 }
 .arrow-badge text {
   font: 700 0.16px system-ui, sans-serif;
@@ -699,7 +699,7 @@ button.primary {
   text-overflow: ellipsis;
 }
 .brilliant-badge {
-  color: #00e5ff;
+  color: #33b8ff;
 }
 .explanation {
   margin-top: 10px;
@@ -734,13 +734,13 @@ button.primary {
   vertical-align: 1px;
 }
 .score-dot.glow {
-  box-shadow: 0 0 6px #00e5ff;
+  box-shadow: 0 0 6px #33b8ff;
 }
 .cls-brilliant .badge {
-  color: #00e5ff;
+  color: #33b8ff;
 }
 .move.cls-brilliant {
-  color: #00e5ff;
+  color: #33b8ff;
 }
 .segmented-row {
   display: flex;

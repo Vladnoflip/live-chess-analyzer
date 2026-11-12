@@ -61,7 +61,7 @@ Extension permissions: `storage` (settings) and `offscreen` (engine host), plus 
 - **Opening trainer** with 19 sections in tabs: *Gambits* (King's, Queen's, Evans, Benko, Budapest, Muzio and all gambits), *Indian* (Nimzo-Indian, King's Indian, Queen's Indian, Grünfeld and all Indian defences), *Semi-open* (Sicilian, French, Caro-Kann, Alekhine, Scandinavian), *Closed* (Slav) and *All*. Every section shows how many book lines it trains (see [Trainer sections](#trainer-sections)). Any book move counts as correct. Progress — the current line and lifetime statistics per section — is saved in `localStorage` and restored when you reopen the trainer.
 - **Standalone trainer site** inside the extension, opened from the popup. It has a soft paper-and-sage theme with automatic dark mode and the cburnett pieces used by lichess.
 - **Draw detection.** Stalemate, insufficient material, the fifty-move rule and threefold repetition (from the game history) are recognised with chess.js. A drawn position shows **0.00** on a grey eval bar with a *Draw* badge and the reason, and the engine is not asked. In UCI, `score mate 0` means the side to move is checkmated; stalemate comes as `cp 0`, and any score in a drawn position is forced to exactly 0.00.
-- **Arrows**: a thin line (7–9% of a square) from a small ring on the source square to a compact head with softly rounded corners that stops short of the target piece. The best or selected move also frames its source and target squares with rounded outlines; the score is shown in a small rounded rectangle on the line, and every arrow glows softly in its neon colour. Knight arrows bend into an L. The web board, the trainer and the extension overlay share the same geometry.
+- **Arrows**: a thin line (7–9% of a square) from a small ring on the source square to a compact head with softly rounded corners that stops short of the target piece. The best or selected move also frames its source and target squares with rounded outlines; the score is shown in a small rounded rectangle on the line, and every arrow has a faint glow in its own colour. Knight arrows bend into an L. The web board, the trainer and the extension overlay share the same geometry.
 - **Annotated PGN export.** After *Review game*, *Export PGN* downloads the game with a comment per move: `{?? Blunder: Loses a piece (~3.0 pawns). Best was Nc6 [%eval 8.50]}`, `{!! Brilliant move [%eval 1.66]}`. Comments follow the UI language; `[%eval]` uses the lichess/chess.com format.
 - **Lichess import (web app only, optional).** Enter a lichess username to load the last 10 games (`https://lichess.org/api/games/user/{name}?max=10&pgnInJson=true`), then *Review all* to analyse them one by one with a blunder/mistake/inaccuracy count per game. The panel warns that this is the only network request in the app. The extension has no such button and no extra permissions.
 - **Board themes**: Classic, Wood, Neon and Soft, built from CSS custom properties. Choose one under *Engine settings → Board theme* in the web app, or *Trainer board theme* in the extension popup.
@@ -222,9 +222,9 @@ The best move always scores 100. An inaccuracy (10–20 pp) lands between 55 and
 
 | score | < 25 | 25–49 | 50–74 | 75–89 | ≥ 90 | brilliant |
 |---|---|---|---|---|---|---|
-| colour | neon red `#ff2e63` | neon orange `#ff9f1c` | neon yellow `#ffee32` | lime `#b6ff3b` | neon green `#00ff9d` | cyan `#00e5ff` with a stronger glow |
+| colour | red `#ff4d4f` | orange `#ff9a2e` | yellow `#ffd93d` | light green `#7bdc4f` | green `#1fbf5a` | blue `#33b8ff` with a stronger glow |
 
-Every arrow and badge has a soft glow in its own colour.
+Every arrow and badge has a faint glow in its own colour.
 
 **5. Brilliant flag.** A move is brilliant when all of the following hold:
 - it is the engine's best move;
