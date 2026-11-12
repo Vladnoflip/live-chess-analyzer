@@ -7,6 +7,8 @@ import { NodeTransport } from './node.transport';
 import { buildCandidates, isBrilliant } from '../src/core/candidates';
 import { moveScore } from '../src/core/move-score';
 import { classifyMove } from '../src/core/classification';
+import { exportAnnotatedPgn } from '../src/core/pgn-export';
+import { I18n } from '../src/core/i18n';
 
 /**
  * Runs the real Stockfish 18 lite WASM build (same file the browser loads) through
@@ -120,6 +122,10 @@ describe('AnalysisManager with the real engine (integration)', () => {
       expect(classes[4]).toBe('blunder'); // 2... Qh4??
       expect(classes[5]).toBe('best'); // 3. Nxh4
       expect(evals[moves[4]!.fenAfter]?.score.value).toBeGreaterThan(600);
+
+      const pgn = exportAnnotatedPgn(manager.getState(), new BoardService(), new I18n('en').text);
+      expect(pgn).toMatch(/Qh4 \{\?\? Blunder: Loses a piece/);
+      expect(pgn).toMatch(/Nxh4 \{\[%eval \d+\.\d\d\]\}/);
     } finally {
       manager.dispose();
     }

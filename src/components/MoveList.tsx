@@ -17,9 +17,11 @@ export interface MoveListProps {
   onSelect(ply: number): void;
   onReview(): void;
   onCancelReview(): void;
+  /** Downloads the annotated PGN; enabled once at least part of the game is reviewed. */
+  onExport?: () => void;
 }
 
-export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, onSelect, onReview, onCancelReview }: MoveListProps) {
+export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, onSelect, onReview, onCancelReview, onExport }: MoveListProps) {
   const { t } = useI18n();
   const activeRef = useRef<HTMLButtonElement | null>(null);
   useEffect(() => {
@@ -79,9 +81,21 @@ export function MoveList({ moves, classes, moveScores, bookPlies, ply, review, o
             </button>
           </span>
         ) : (
-          <button className="small" disabled={moves.length === 0} onClick={onReview}>
-            {t('moves.review')}
-          </button>
+          <span className="moves-actions">
+            {onExport && (
+              <button
+                className="small"
+                disabled={moves.length === 0 || Object.keys(classes).length === 0}
+                title={Object.keys(classes).length === 0 ? t('pgn.exportNeedsReview') : t('pgn.exportHint')}
+                onClick={onExport}
+              >
+                {t('pgn.export')}
+              </button>
+            )}
+            <button className="small" disabled={moves.length === 0} onClick={onReview}>
+              {t('moves.review')}
+            </button>
+          </span>
         )}
       </header>
       {review?.running && (

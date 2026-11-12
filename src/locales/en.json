@@ -243,5 +243,10 @@
   "ex.draw.stalemate": "Draw: stalemate, the side to move has no legal moves",
   "ex.draw.insufficient": "Draw: neither side has enough material to mate",
   "ex.draw.fifty": "Draw by the fifty-move rule",
-  "ex.draw.threefold": "Draw by threefold repetition"
+  "ex.draw.threefold": "Draw by threefold repetition",
+  "pgn.export": "Export PGN",
+  "pgn.exportHint": "Download the game with move classifications and engine evaluations as comments",
+  "pgn.exportNeedsReview": "Review the game first to export it with annotations",
+  "pgn.brilliant": "Brilliant move",
+  "pgn.bestWas": "Best was {san}"
 }

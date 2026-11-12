@@ -3,7 +3,9 @@ import type { Square } from 'chess.js';
 import { useAnalysis, useDrill, useExplorer, useI18n, useServices } from './hooks/useAnalysis';
 import type { AnalysisState } from './core/analysis.manager';
 import type { MessageKey, MessageParams } from './core/i18n';
-import { START_FEN } from './services/board.service';
+import { START_FEN, boardService } from './services/board.service';
+import { exportAnnotatedPgn, pgnFileName } from './core/pgn-export';
+import { downloadText } from './components/download';
 import { Board } from './components/Board';
 import { EvalBar } from './components/EvalBar';
 import { EnginePanel } from './components/EnginePanel';
@@ -29,7 +31,7 @@ export function App() {
   const state = useAnalysis();
   const explorerState = useExplorer();
   const drillState = useDrill();
-  const { t, locale } = useI18n();
+  const { t, text, locale } = useI18n();
 
   // Keep <html lang> and the tab title in sync with the UI language.
   useEffect(() => {
@@ -193,6 +195,7 @@ export function App() {
             onSelect={(ply) => !drilling && manager.goTo(ply)}
             onReview={() => void manager.reviewGame()}
             onCancelReview={() => manager.cancelReview()}
+            onExport={() => downloadText(pgnFileName(state.headers), exportAnnotatedPgn(state, boardService, text))}
           />
           {mode === 'analysis' && (
             <>

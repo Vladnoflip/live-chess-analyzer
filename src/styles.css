@@ -211,6 +211,10 @@ textarea.invalid {
   top: 4px;
   color: #eee;
 }
+.moves-actions {
+  display: inline-flex;
+  gap: 6px;
+}
 .eval-bar.draw {
   background: #6b6b6b;
 }
