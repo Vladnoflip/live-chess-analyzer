@@ -598,13 +598,26 @@ button.primary {
 /* Same opacity for every arrow (group opacity, so overlapping parts don't darken). */
 .arrow-g {
   opacity: 0.95;
-  filter: drop-shadow(0 0.03px 0.035px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 0.015px 0.02px rgba(0, 0, 0, 0.45));
+}
+.arrow-frame {
+  fill: none;
+  stroke-width: 0.035px;
+}
+.arrow-frame.to {
+  fill-opacity: 0.24;
+}
+.arrow-frame.from {
+  stroke-opacity: 0.7;
+}
+.arrow-origin {
+  fill: rgba(255, 255, 255, 0.92);
 }
 .arrow-g.glow {
   filter: drop-shadow(0 0 0.08px #00bfff) drop-shadow(0 0 0.14px #00bfff);
 }
 .arrow-badge text {
-  font: 700 0.19px system-ui, sans-serif;
+  font: 700 0.16px system-ui, sans-serif;
 }
 .pv-from {
   fill: rgba(0, 191, 255, 0.18);

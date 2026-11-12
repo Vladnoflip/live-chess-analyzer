@@ -3,7 +3,7 @@ import type { Square } from 'chess.js';
 import type { BoardPiece } from '../services/board.service';
 import { pieceImage } from './pieces';
 import type { CandidateArrow, PvMark } from '../core/analysis.manager';
-import { arrowShape, pointsAttr, squareCenter } from '../core/arrow-geometry';
+import { ARROW, arrowShape, pointsAttr, squareCenter } from '../core/arrow-geometry';
 import { textColorOn } from '../core/move-score';
 import { trackPieces, type TrackedPiece } from '../core/piece-tracking';
 import { useBoardTheme, useI18n } from '../hooks/useAnalysis';
@@ -281,23 +281,31 @@ interface ArrowProps {
 }
 
 /**
- * Rounded shaft (bent for knight moves) + softened head + score badge. Every arrow
- * has the same opacity; the selected/best one is only wider.
+ * Thin line from a ring on the source square to a compact rounded head, plus a score
+ * badge. The best/selected arrow also frames its source and target squares. Every
+ * arrow has the same opacity.
  */
 function Arrow({ arrow, orientation, part }: ArrowProps) {
   const shape = arrowShape(squareCenter(arrow.from, orientation), squareCenter(arrow.to, orientation), arrow.accent);
   if (part === 'badge') {
     return (
       <g className="arrow-badge" pointerEvents="none">
-        <circle cx={shape.badge.x} cy={shape.badge.y} r={0.2} fill={arrow.color} stroke="rgba(0,0,0,.35)" strokeWidth={0.025} />
+        <circle cx={shape.badge.x} cy={shape.badge.y} r={ARROW.badgeRadius} fill={arrow.color} stroke="rgba(0,0,0,.35)" strokeWidth={0.02} />
         <text x={shape.badge.x} y={shape.badge.y + 0.005} fill={textColorOn(arrow.color)} textAnchor="middle" dominantBaseline="central">
           {arrow.score}
         </text>
       </g>
     );
   }
+  const { frames } = shape;
   return (
     <g className={`arrow-g${arrow.glow ? ' glow' : ''}`} pointerEvents="none">
+      {frames && (
+        <>
+          <rect className="arrow-frame from" x={frames.from.x} y={frames.from.y} width={frames.from.size} height={frames.from.size} rx={frames.from.radius} stroke={arrow.color} />
+          <rect className="arrow-frame to" x={frames.to.x} y={frames.to.y} width={frames.to.size} height={frames.to.size} rx={frames.to.radius} stroke={arrow.color} fill={arrow.color} />
+        </>
+      )}
       <polyline
         points={pointsAttr(shape.shaft)}
         fill="none"
@@ -307,6 +315,7 @@ function Arrow({ arrow, orientation, part }: ArrowProps) {
         strokeLinejoin="round"
       />
       <path d={shape.headPath} fill={arrow.color} />
+      <circle className="arrow-origin" cx={shape.origin.x} cy={shape.origin.y} r={shape.originRadius} stroke={arrow.color} strokeWidth={shape.width * 0.55} />
     </g>
   );
 }

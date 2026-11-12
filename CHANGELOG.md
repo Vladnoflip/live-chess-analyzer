@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Arrows** were restyled: a thin line (7–9% of a square) starting at a small ring on the source square, a compact head with rounded corners that stops 0.3 squares before the target centre, and rounded frames around the source and target squares of the best/selected move (the target frame is lightly filled). Score badges moved beside the line, so one-square arrows are no longer hidden under them. Shared by the web board, the trainer and the extension overlay.
+
 ## [0.7.0] — Draws, PGN export, lichess import, themes, heatmap, Guess the move
 
 ### Added

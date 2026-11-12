@@ -1,39 +1,57 @@
 /**
  * Arrow shapes on an 8×8 board in square units (one square = 1). Shared by the app
  * board, the trainer site and the extension overlay, so all of them draw identical
- * arrows: a shaft with a round tail (bent for knight moves) and a head with softly
- * rounded corners whose tip stops short of the target square's centre.
+ * arrows: a thin line that starts at a small ring on the source square, a compact head
+ * with softly rounded corners that stops short of the target piece, and (for the best
+ * or selected move) rounded frames around the source and target squares. Knight moves
+ * bend into an L.
  */
 export interface Point {
   readonly x: number;
   readonly y: number;
 }
 
+/** Rounded frame around a square: top-left corner and size in squares. */
+export interface SquareFrame {
+  readonly x: number;
+  readonly y: number;
+  readonly size: number;
+  readonly radius: number;
+}
+
 export interface ArrowShape {
-  /** Shaft polyline (2 points, or 3 for a knight's L-shaped arrow); stroke it with round caps and joins. */
+  /** Line polyline (2 points, or 3 for a knight's L-shaped arrow); stroke it with round caps and joins. */
   readonly shaft: readonly Point[];
   /** Arrowhead triangle: tip, then the two base corners. */
   readonly head: readonly [Point, Point, Point];
   /** SVG path data of the head with rounded corners; fill it, no stroke. */
   readonly headPath: string;
-  /** Where the score badge goes: on the shaft, before the head. */
+  /** Ring marking the start of the move (centre of the source square). */
+  readonly origin: Point;
+  readonly originRadius: number;
+  /** Frames around the source and target squares (accented arrows only, else null). */
+  readonly frames: { readonly from: SquareFrame; readonly to: SquareFrame } | null;
+  /** Where the score badge goes: on the line, before the head. */
   readonly badge: Point;
-  /** Shaft width in squares. */
+  /** Line width in squares. */
   readonly width: number;
 }
 
-/** Arrow proportions in squares. Shaft widths are 20–24% of a square. */
+/** Arrow proportions in squares. */
 export const ARROW = {
-  width: { normal: 0.2, accent: 0.24 },
-  headLength: { normal: 0.44, accent: 0.5 },
-  headHalfWidth: { normal: 0.26, accent: 0.3 },
+  width: { normal: 0.07, accent: 0.09 },
+  headLength: { normal: 0.27, accent: 0.32 },
+  headHalfWidth: { normal: 0.15, accent: 0.18 },
+  originRadius: { normal: 0.075, accent: 0.095 },
   /** Distance from the target centre to the tip, so the piece stays visible. */
-  tipGap: 0.2,
-  /** The tail starts this far from the source centre (the round cap adds width/2). */
-  tailGap: 0.08,
+  tipGap: 0.3,
+  /** Square frames: inset from the square edge and corner radius. */
+  frameInset: 0.05,
+  frameRadius: 0.14,
+  badgeRadius: 0.17,
   /** Corner rounding of the head as a fraction of the adjacent edges. */
-  tipRounding: 0.1,
-  baseRounding: 0.18,
+  tipRounding: 0.12,
+  baseRounding: 0.22,
 } as const;
 
 /** Centre of a square in board coordinates for the given orientation. */
@@ -51,7 +69,7 @@ export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape 
 
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  // Knight moves bend: long leg first, then the short one (like on lichess).
+  // Knight moves bend: long leg first, then the short one.
   const knight = (Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dx) === 1 && Math.abs(dy) === 2);
   const corner: Point | null = knight ? (Math.abs(dx) === 2 ? { x: to.x, y: from.y } : { x: from.x, y: to.y }) : null;
 
@@ -71,20 +89,31 @@ export function arrowShape(from: Point, to: Point, accent: boolean): ArrowShape 
     { x: base.x + uy * headHalf, y: base.y - ux * headHalf },
   ];
 
-  // Round tail just off the source centre; the shaft runs a little into the head so
-  // there is no seam (arrows use group opacity, so the overlap doesn't darken).
-  const sx = (corner ?? to).x - from.x;
-  const sy = (corner ?? to).y - from.y;
-  const slen = Math.hypot(sx, sy) || 1;
-  const start = { x: from.x + (sx / slen) * ARROW.tailGap, y: from.y + (sy / slen) * ARROW.tailGap };
-  const shaftEnd = { x: base.x + ux * 0.1, y: base.y + uy * 0.1 };
-  const shaft = corner ? [start, corner, shaftEnd] : [start, shaftEnd];
+  // The line starts at the ring and runs a little into the head so there is no seam.
+  const shaftEnd = { x: base.x + ux * 0.06, y: base.y + uy * 0.06 };
+  const shaft = corner ? [from, corner, shaftEnd] : [from, shaftEnd];
 
-  // Badge sits on the last segment, 0.32 squares before the head (or mid-way on short arrows).
-  const segLen = Math.hypot(base.x - lastFrom.x, base.y - lastFrom.y);
-  const back = Math.min(0.32, segLen / 2);
-  const badge = { x: base.x - ux * back, y: base.y - uy * back };
-  return { shaft, head, headPath: roundedTrianglePath(head), badge, width };
+  const frame = (c: Point): SquareFrame => ({
+    x: c.x - 0.5 + ARROW.frameInset,
+    y: c.y - 0.5 + ARROW.frameInset,
+    size: 1 - 2 * ARROW.frameInset,
+    radius: ARROW.frameRadius,
+  });
+
+  // Badge sits beside the last segment, level with the head's base, so the thin line
+  // and the head stay visible even on one-square moves.
+  const side = ARROW.badgeRadius + headHalf * 0.6;
+  const badge = { x: base.x - uy * side, y: base.y + ux * side };
+  return {
+    shaft,
+    head,
+    headPath: roundedTrianglePath(head),
+    origin: from,
+    originRadius: ARROW.originRadius[kind],
+    frames: accent ? { from: frame(from), to: frame(to) } : null,
+    badge,
+    width,
+  };
 }
 
 /**

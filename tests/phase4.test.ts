@@ -165,7 +165,8 @@ describe('arrow geometry', () => {
     expect(s.shaft).toHaveLength(2);
     expect(s.head[0].x).toBeCloseTo(4.5);
     expect(s.head[0].y).toBeGreaterThan(4.5); // stops short of e4's centre (y = 4.5)
-    expect(s.badge.y).toBeGreaterThan(s.head[0].y); // badge sits before the head
+    expect(s.badge.y).toBeGreaterThan(s.head[0].y); // badge sits before the tip
+    expect(Math.abs(s.badge.x - 4.5)).toBeGreaterThan(0.2); // and beside the line, not on it
   });
 
   it('bends knight arrows along the long leg first', () => {
@@ -194,11 +195,13 @@ describe('arrow geometry', () => {
     }
   });
 
-  it('uses shafts 20–25% of a square wide and a rounded head path', () => {
+  it('draws a thin line (under 10% of a square) with a compact rounded head', () => {
     for (const accent of [true, false]) {
       const s = arrowShape(squareCenter('e2', 'w'), squareCenter('e4', 'w'), accent);
-      expect(s.width).toBeGreaterThanOrEqual(0.2);
-      expect(s.width).toBeLessThanOrEqual(0.25);
+      expect(s.width).toBeGreaterThanOrEqual(0.06);
+      expect(s.width).toBeLessThanOrEqual(0.1);
+      const headWidth = Math.hypot(s.head[1].x - s.head[2].x, s.head[1].y - s.head[2].y);
+      expect(headWidth).toBeLessThan(0.4);
       // Three rounded corners: one move, three curves, closed.
       expect(s.headPath.match(/Q/g)).toHaveLength(3);
       expect(s.headPath.startsWith('M')).toBe(true);
@@ -207,10 +210,20 @@ describe('arrow geometry', () => {
     }
   });
 
-  it('starts the round tail just off the source centre', () => {
+  it('starts at a ring on the source centre', () => {
     const from = squareCenter('e2', 'w');
     const s = arrowShape(from, squareCenter('e4', 'w'), false);
-    expect(Math.hypot(s.shaft[0]!.x - from.x, s.shaft[0]!.y - from.y)).toBeCloseTo(ARROW.tailGap, 5);
+    expect(s.shaft[0]).toEqual(from);
+    expect(s.origin).toEqual(from);
+    expect(s.originRadius).toBeGreaterThan(s.width / 2);
+  });
+
+  it('frames the source and target squares of the accented arrow only', () => {
+    const a = arrowShape(squareCenter('e2', 'w'), squareCenter('e4', 'w'), true);
+    expect(a.frames?.from.x).toBeCloseTo(4 + ARROW.frameInset);
+    expect(a.frames?.to.y).toBeCloseTo(4 + ARROW.frameInset);
+    expect(a.frames?.to.size).toBeCloseTo(1 - 2 * ARROW.frameInset);
+    expect(arrowShape(squareCenter('e2', 'w'), squareCenter('e4', 'w'), false).frames).toBeNull();
   });
 
   it('accent arrows are wider (opacity is handled by CSS and is the same for all)', () => {
