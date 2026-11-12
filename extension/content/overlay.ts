@@ -23,6 +23,9 @@ svg.arrows { position: fixed; pointer-events: none; overflow: visible; }
 .label { position: absolute; left: 0; right: 0; text-align: center; }
 .label.white { bottom: 3px; color: #222; }
 .label.black { top: 3px; color: #eee; }
+.bar.draw { background: #6b6b6b; }
+.bar.draw .fill { background: #a3a3a3; }
+.label.draw { top: 50%; transform: translateY(-50%); color: #f2f2f2; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
 .bar.flipped .label.white { bottom: auto; top: 3px; }
 .bar.flipped .label.black { top: auto; bottom: 3px; }
 .spinner { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -6px 0 0 -6px;
@@ -63,6 +66,8 @@ export interface OverlayState {
   readonly rect: DOMRect;
   readonly orientation: Color;
   readonly score: Score | null;
+  /** The position is a draw (stalemate, insufficient material, fifty moves): grey bar at 0.00. */
+  readonly draw: boolean;
   readonly loading: boolean;
   readonly error: boolean;
   readonly showBar: boolean;
@@ -128,15 +133,17 @@ export class Overlay {
     d.lines = state.lines ? JSON.stringify(state.lines.map((l) => [l.san, l.moveScore, l.color])) : '';
     d.opening = state.opening ?? '';
     d.font = state.font;
+    d.draw = state.draw ? '1' : '';
 
     const barLeft = rect.left >= BAR_WIDTH + BAR_GAP ? rect.left - BAR_WIDTH - BAR_GAP : rect.left + 2;
     place(this.bar, barLeft, rect.top, BAR_WIDTH, rect.height);
     this.bar.style.display = state.showBar ? '' : 'none';
     this.bar.classList.toggle('flipped', state.orientation === 'b');
-    const white = whiteBarPercent(state.score);
+    this.bar.classList.toggle('draw', state.draw);
+    const white = state.draw ? 50 : whiteBarPercent(state.score);
     this.fill.style.height = `${white}%`;
-    this.label.textContent = state.score ? formatScore(state.score).replace(/^\+/, '') : '';
-    this.label.className = `label ${white >= 50 ? 'white' : 'black'}`;
+    this.label.textContent = state.draw ? '0.00' : state.score ? formatScore(state.score).replace(/^\+/, '') : '';
+    this.label.className = state.draw ? 'label draw' : `label ${white >= 50 ? 'white' : 'black'}`;
     this.spinner.style.display = state.loading && !state.error ? '' : 'none';
     this.errorMark.style.display = state.error ? '' : 'none';
 

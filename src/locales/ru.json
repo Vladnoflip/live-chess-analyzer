@@ -233,5 +233,15 @@
   "explorer.expand": "Развернуть",
   "explorer.collapse": "Свернуть",
   "support.project": "Поддержать проект",
-  "support.coffee": "Угостить кофе"
+  "support.coffee": "Угостить кофе",
+  "draw.title": "Ничья",
+  "draw.reason.stalemate": "пат",
+  "draw.reason.insufficient": "недостаточно материала",
+  "draw.reason.fifty": "правило 50 ходов",
+  "draw.reason.threefold": "троекратное повторение",
+  "draw.badge": "Ничья: {reason}",
+  "ex.draw.stalemate": "Ничья: пат, у стороны на ходу нет ходов",
+  "ex.draw.insufficient": "Ничья: ни у одной стороны не хватает материала для мата",
+  "ex.draw.fifty": "Ничья по правилу 50 ходов",
+  "ex.draw.threefold": "Ничья: троекратное повторение позиции"
 }

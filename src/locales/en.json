@@ -233,5 +233,15 @@
   "explorer.expand": "Expand",
   "explorer.collapse": "Collapse",
   "support.project": "Support the Project",
-  "support.coffee": "Buy me a coffee"
+  "support.coffee": "Buy me a coffee",
+  "draw.title": "Draw",
+  "draw.reason.stalemate": "stalemate",
+  "draw.reason.insufficient": "insufficient material",
+  "draw.reason.fifty": "fifty-move rule",
+  "draw.reason.threefold": "threefold repetition",
+  "draw.badge": "Draw: {reason}",
+  "ex.draw.stalemate": "Draw: stalemate, the side to move has no legal moves",
+  "ex.draw.insufficient": "Draw: neither side has enough material to mate",
+  "ex.draw.fifty": "Draw by the fifty-move rule",
+  "ex.draw.threefold": "Draw by threefold repetition"
 }

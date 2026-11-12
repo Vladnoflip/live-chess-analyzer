@@ -110,7 +110,7 @@ export function App() {
 
       <main className="layout">
         <div className="board-area">
-          <EvalBar score={hintsHidden ? null : state.live.score} flipped={flipped} />
+          <EvalBar score={hintsHidden ? null : state.live.score} flipped={flipped} draw={state.drawReason} />
           <div className="board-wrap">
             <div className={`opening-strip ${position.inBook ? 'in' : 'out'}`}>
               {explorerState.status !== 'ready'
@@ -173,7 +173,7 @@ export function App() {
               onReveal={() => drill.reveal()}
             />
           )}
-          <EnginePanel live={hintsHidden ? { ...state.live, score: null, bestMoveSan: null, bestMoveUci: null, pvSan: [] } : state.live} engineName={state.engineName} threads={state.settings.threads} />
+          <EnginePanel live={hintsHidden ? { ...state.live, score: null, bestMoveSan: null, bestMoveUci: null, pvSan: [] } : state.live} engineName={state.engineName} threads={state.settings.threads} draw={state.drawReason} />
           {!hintsHidden && (
             <VariantsPanel
               candidates={state.candidates}

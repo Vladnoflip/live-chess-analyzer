@@ -5,7 +5,8 @@ import { buildCandidates, isBrilliant, type Candidate } from './candidates';
 import { moveScore } from './move-score';
 import { explainMove, type Explanation, type OpeningContext } from './move-explainer';
 import { MATED_CP, type EngineSettings, type MoveClass, type Score, type SearchInfo, type SearchResult } from './types';
-import { BoardService, PgnParseError, START_FEN, type BoardPiece, type GameMove } from '../services/board.service';
+import { BoardService, PgnParseError, START_FEN, type BoardPiece, type DrawReason, type GameMove } from '../services/board.service';
+import { resolveTerminalScore } from '../services/uci.parser';
 import { msg, type Msg } from './i18n';
 import { EngineService, MAX_MULTIPV, SearchCancelledError } from '../services/engine.service';
 
@@ -79,6 +80,8 @@ export interface AnalysisState {
   /** Explanation of the selected candidate, or of the move that led to this position. */
   readonly explanation: readonly Explanation[];
   readonly review: ReviewProgress | null;
+  /** Why the displayed position is a draw (including threefold repetition in the game), or null. */
+  readonly drawReason: DrawReason | null;
 
   readonly fenInput: string;
   readonly fenError: Msg | null;
@@ -156,6 +159,7 @@ export class AnalysisManager extends Store<AnalysisState> {
       candidates: [],
       selectedRank: null,
       explanation: [],
+      drawReason: null,
       review: null,
       fenInput: START_FEN,
       fenError: null,
@@ -399,9 +403,11 @@ export class AnalysisManager extends Store<AnalysisState> {
 
   /** Analyses the displayed position, reusing the cache when it is deep and wide enough. */
   analyzeCurrent(): void {
-    const { fen, settings, review } = this.getState();
+    const { fen, settings, review, ply } = this.getState();
 
-    const terminal = this.terminalEval(fen);
+    const drawReason = this.board.drawReason(fen, this.historyFens(ply));
+    if (drawReason !== this.getState().drawReason) this.setState({ drawReason });
+    const terminal = this.terminalEval(fen, drawReason);
     if (terminal) {
       this.storeEval(fen, terminal);
       this.showEval(fen, terminal, 0, true);
@@ -425,7 +431,7 @@ export class AnalysisManager extends Store<AnalysisState> {
 
     this.engine.analyze(fen, { depth: settings.depth }).then(
       (result) => {
-        const ev = this.evalFromResult(result, settings.multiPv);
+        const ev = this.evalFromResult(fen, result, settings.multiPv);
         if (!ev) return;
         this.storeEval(fen, ev);
         if (this.getState().fen === fen) this.showEval(fen, ev, result.elapsedMs, false);
@@ -453,11 +459,11 @@ export class AnalysisManager extends Store<AnalysisState> {
         const fen = fens[i] as string;
         const cached = this.getState().evals[fen];
         if (!cached || cached.depth < settings.reviewDepth) {
-          const terminal = this.terminalEval(fen);
+          const terminal = this.terminalEval(fen, this.board.drawReason(fen, fens.slice(0, i + 1)));
           if (terminal) {
             this.storeEval(fen, terminal);
           } else {
-            const ev = this.evalFromResult(await this.engine.analyze(fen, { depth: settings.reviewDepth }), settings.multiPv);
+            const ev = this.evalFromResult(fen, await this.engine.analyze(fen, { depth: settings.reviewDepth }), settings.multiPv);
             if (ev) this.storeEval(fen, ev);
           }
         }
@@ -485,10 +491,12 @@ export class AnalysisManager extends Store<AnalysisState> {
 
   // ───────────────────────────── internals ─────────────────────────────
 
-  private evalFromResult(result: SearchResult, multiPv: number): PositionEval | null {
+  private evalFromResult(fen: string, result: SearchResult, multiPv: number): PositionEval | null {
     if (!result.info) return null;
+    const status = this.board.status(fen);
+    const terminal = status === 'checkmate' ? 'checkmate' : status === 'ongoing' ? null : 'draw';
     return {
-      score: result.info.score,
+      score: resolveTerminalScore(result.info.score, terminal),
       bestMove: result.bestMove,
       pv: result.info.pv,
       depth: result.info.depth,
@@ -545,7 +553,9 @@ export class AnalysisManager extends Store<AnalysisState> {
     const selected = candidates.find((c) => c.rank === selectedRank);
     if (selected) {
       const opening = this.openingLookup?.(fen, selected.uciMove, ply + 1) ?? null;
-      this.setState({ explanation: explainMove({ fen, uci: selected.uciMove, candidates, opening }, this.board) });
+      const applied = this.board.applyUci(fen, selected.uciMove);
+      const drawAfter = applied ? this.board.drawReason(applied.fen, this.historyFens(ply)) : null;
+      this.setState({ explanation: explainMove({ fen, uci: selected.uciMove, candidates, opening, drawAfter }, this.board) });
       return;
     }
     const move = moves[ply - 1];
@@ -559,7 +569,14 @@ export class AnalysisManager extends Store<AnalysisState> {
     const opening = this.openingLookup?.(move.fenBefore, move.uci, move.ply) ?? null;
     this.setState({
       explanation: explainMove(
-        { fen: move.fenBefore, uci: move.uci, candidates: prevCandidates, afterScore: after?.score ?? null, opening },
+        {
+          fen: move.fenBefore,
+          uci: move.uci,
+          candidates: prevCandidates,
+          afterScore: after?.score ?? null,
+          opening,
+          drawAfter: this.board.drawReason(move.fenAfter, this.historyFens(move.ply)),
+        },
         this.board,
       ),
     });
@@ -591,9 +608,15 @@ export class AnalysisManager extends Store<AnalysisState> {
     return { classes, moveScores };
   }
 
-  private terminalEval(fen: string): PositionEval | null {
+  /** Positions [start .. ply] of the loaded game, used for threefold repetition. */
+  private historyFens(ply: number): string[] {
+    const { startFen, moves } = this.getState();
+    return [startFen, ...moves.slice(0, ply).map((m) => m.fenAfter)];
+  }
+
+  private terminalEval(fen: string, drawReason: DrawReason | null): PositionEval | null {
     const status = this.board.status(fen);
-    if (status === 'ongoing') return null;
+    if (status === 'ongoing' && drawReason === null) return null;
     const value = status === 'checkmate' ? (this.board.turn(fen) === 'w' ? -MATED_CP : MATED_CP) : 0;
     return { score: { kind: 'cp', value }, bestMove: null, pv: [], depth: TERMINAL_DEPTH, lines: [], multiPv: MAX_MULTIPV };
   }

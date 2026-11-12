@@ -1,4 +1,5 @@
 import type { LiveView } from '../core/analysis.manager';
+import type { DrawReason } from '../services/board.service';
 import { formatCount, formatDuration, formatScore } from '../core/format';
 import type { MessageKey } from '../core/i18n';
 import { useI18n } from '../hooks/useAnalysis';
@@ -11,7 +12,17 @@ const STATUS_TEXT: Record<LiveView['status'], MessageKey> = {
   error: 'engine.status.error',
 };
 
-export function EnginePanel({ live, engineName, threads }: { live: LiveView; engineName: string; threads: number }) {
+export function EnginePanel({
+  live,
+  engineName,
+  threads,
+  draw = null,
+}: {
+  live: LiveView;
+  engineName: string;
+  threads: number;
+  draw?: DrawReason | null;
+}) {
   const { t, text } = useI18n();
   return (
     <section className="panel engine-panel">
@@ -29,7 +40,8 @@ export function EnginePanel({ live, engineName, threads }: { live: LiveView; eng
       ) : (
         <>
           <div className="engine-main">
-            <span className="engine-score">{formatScore(live.score)}</span>
+            <span className={`engine-score${draw ? ' is-draw' : ''}`}>{draw ? formatScore({ kind: 'cp', value: 0 }) : formatScore(live.score)}</span>
+            {draw && <span className="draw-badge">{t('draw.badge', { reason: t(`draw.reason.${draw}` as const) })}</span>}
             <div className="engine-best">
               <span className="muted">{t('engine.bestMove')}</span>
               <strong>{live.bestMoveSan ?? '—'}</strong>

@@ -93,6 +93,13 @@ describe('EngineService ↔ Stockfish 18 (integration)', () => {
     expect(result.bestMove).toBeNull();
     expect(result.info?.score).toEqual({ kind: 'cp', value: -MATED_CP });
   });
+
+  it('reports stalemate as cp 0, not mate 0', async () => {
+    const stalemate = '7k/5Q2/6K1/8/8/8/8/8 b - - 0 1';
+    const result = await engine.analyze(stalemate, { depth: 5 });
+    expect(result.bestMove).toBeNull();
+    expect(result.info?.score).toEqual({ kind: 'cp', value: 0 });
+  });
 });
 
 describe('AnalysisManager with the real engine (integration)', () => {
@@ -113,6 +120,28 @@ describe('AnalysisManager with the real engine (integration)', () => {
       expect(classes[4]).toBe('blunder'); // 2... Qh4??
       expect(classes[5]).toBe('best'); // 3. Nxh4
       expect(evals[moves[4]!.fenAfter]?.score.value).toBeGreaterThan(600);
+    } finally {
+      manager.dispose();
+    }
+  });
+
+  it('shows a repeated position as a draw at 0.00 without asking the engine', async () => {
+    const engine = new EngineService(new NodeTransport());
+    const manager = new AnalysisManager(engine, new BoardService(), {
+      maxThreads: 1,
+      multiThreaded: false,
+      initialSettings: { depth: 8, reviewDepth: 8, hashMb: 16 },
+    });
+    try {
+      await manager.init();
+      expect(manager.loadPgn('1. Nf3 Nf6 2. Ng1 Ng8 3. Nf3 Nf6 4. Ng1 Ng8 *')).toBe(true);
+      manager.goTo(8);
+      const s = manager.getState();
+      expect(s.drawReason).toBe('threefold');
+      expect(s.live.score).toEqual({ kind: 'cp', value: 0 });
+      expect(s.live.status).toBe('done');
+      manager.goTo(4);
+      expect(manager.getState().drawReason).toBeNull();
     } finally {
       manager.dispose();
     }

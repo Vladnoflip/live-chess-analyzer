@@ -3,7 +3,7 @@ import { moveScore, winDelta } from './move-score';
 import { THRESHOLDS } from './classification';
 import { formatScore } from './format';
 import { MATED_CP, type Color, type Score } from './types';
-import type { BoardService } from '../services/board.service';
+import type { BoardService, DrawReason } from '../services/board.service';
 import type { MessageKey, MessageParams, Msg } from './i18n';
 
 export type Tone = 'good' | 'bad' | 'info';
@@ -35,7 +35,16 @@ export interface ExplainInput {
   /** White-POV evaluation after the move, used when the move isn't among the candidates. */
   readonly afterScore?: Score | null;
   readonly opening?: OpeningContext | null;
+  /** The move ends the game in a draw (stalemate, insufficient material, 50 moves, repetition). */
+  readonly drawAfter?: DrawReason | null;
 }
+
+const DRAW_KEY: Record<DrawReason, MessageKey> = {
+  stalemate: 'ex.draw.stalemate',
+  insufficient: 'ex.draw.insufficient',
+  fifty: 'ex.draw.fifty',
+  threefold: 'ex.draw.threefold',
+};
 
 /** Thresholds of the heuristics below; documented in README. */
 export const EXPLAIN = {
@@ -141,7 +150,10 @@ export function explainMove(input: ExplainInput, board: BoardService): Explanati
     }
   }
 
-  if (after) out.push(line('ex.evalAfter', 'info', { score: formatScore(after) }));
+  if (input.drawAfter) {
+    out.push(line(DRAW_KEY[input.drawAfter], 'info'));
+    out.push(line('ex.evalAfter', 'info', { score: formatScore({ kind: 'cp', value: 0 }) }));
+  } else if (after) out.push(line('ex.evalAfter', 'info', { score: formatScore(after) }));
   return out;
 }
 

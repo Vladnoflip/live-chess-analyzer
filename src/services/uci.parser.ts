@@ -120,5 +120,19 @@ export function toWhitePov(score: Score, sideToMove: 'w' | 'b'): Score {
     // Side to move is checkmated.
     return { kind: 'cp', value: -sign * MATED_CP };
   }
-  return { kind: score.kind, value: sign * score.value };
+  // `|| 0` avoids -0 ("cp 0" for Black would otherwise compare unequal to 0 in tests).
+  return { kind: score.kind, value: sign * score.value || 0 };
+}
+
+/**
+ * Reconciles an engine score (White POV) with what chess.js knows about the position.
+ * In UCI, `mate 0` means the side to move is checkmated; stalemate is reported as
+ * `cp 0`. Some engines nevertheless send `mate 0` for stalemate, so a mate score in a
+ * position chess.js does not see as checkmate, and any score in a drawn position
+ * (stalemate, insufficient material, fifty moves, threefold), becomes an exact 0.00.
+ */
+export function resolveTerminalScore(score: Score, terminal: 'checkmate' | 'draw' | null): Score {
+  if (terminal === 'draw') return { kind: 'cp', value: 0 };
+  if (terminal === null && score.kind === 'cp' && Math.abs(score.value) >= MATED_CP) return { kind: 'cp', value: 0 };
+  return score;
 }

@@ -46,6 +46,14 @@ export interface ParsedGame {
 
 export type GameStatus = 'ongoing' | 'checkmate' | 'stalemate' | 'draw';
 
+/** Why a position is drawn. Threefold repetition needs the game history. */
+export type DrawReason = 'stalemate' | 'insufficient' | 'fifty' | 'threefold';
+
+/** Position identity for repetition: placement, side to move, castling rights, en passant. */
+export function positionKey(fen: string): string {
+  return fen.trim().split(/\s+/).slice(0, 4).join(' ');
+}
+
 const UCI_RE = /^([a-h][1-8])([a-h][1-8])([qrbn])?$/;
 
 /**
@@ -159,6 +167,41 @@ export class BoardService {
     if (chess.isStalemate()) return 'stalemate';
     if (chess.isInsufficientMaterial() || chess.isDrawByFiftyMoves()) return 'draw';
     return 'ongoing';
+  }
+
+  isStalemate(fen: string): boolean {
+    return new Chess(fen).isStalemate();
+  }
+
+  isInsufficientMaterial(fen: string): boolean {
+    return new Chess(fen).isInsufficientMaterial();
+  }
+
+  /**
+   * True when `fen` occurs for at least the third time. `history` holds the earlier
+   * positions of the game (it may include `fen` itself as its last element).
+   */
+  isThreefoldRepetition(fen: string, history: readonly string[] = []): boolean {
+    const key = positionKey(fen);
+    const earlier = history[history.length - 1] === fen ? history.slice(0, -1) : history;
+    let count = 1;
+    for (const h of earlier) if (positionKey(h) === key) count++;
+    return count >= 3;
+  }
+
+  /** Draw by stalemate, insufficient material, the fifty-move rule or threefold repetition. */
+  isDraw(fen: string, history: readonly string[] = []): boolean {
+    return this.drawReason(fen, history) !== null;
+  }
+
+  drawReason(fen: string, history: readonly string[] = []): DrawReason | null {
+    const chess = new Chess(fen);
+    if (chess.isCheckmate()) return null;
+    if (chess.isStalemate()) return 'stalemate';
+    if (chess.isInsufficientMaterial()) return 'insufficient';
+    if (chess.isDrawByFiftyMoves()) return 'fifty';
+    if (this.isThreefoldRepetition(fen, history)) return 'threefold';
+    return null;
   }
 
   /** Parses a PGN (first game only). Throws with a readable message on malformed input. */

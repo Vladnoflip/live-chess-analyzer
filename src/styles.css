@@ -211,6 +211,30 @@ textarea.invalid {
   top: 4px;
   color: #eee;
 }
+.eval-bar.draw {
+  background: #6b6b6b;
+}
+.eval-bar.draw .eval-bar-white {
+  background: #a3a3a3;
+}
+.eval-bar-label.eval-bar-draw {
+  top: 50%;
+  transform: translateY(-50%);
+  color: #f2f2f2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.engine-score.is-draw {
+  color: #a3a3a3;
+}
+.draw-badge {
+  align-self: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #5c5c5c;
+  color: #eee;
+  font-size: 12px;
+  font-weight: 600;
+}
 .eval-bar.flipped .eval-bar-label.on-white {
   bottom: auto;
   top: 4px;

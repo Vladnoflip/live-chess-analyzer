@@ -103,6 +103,10 @@ async function start(): Promise<void> {
     draw(snap, valid.ok ? valid.fen : null);
   };
 
+  // Draw state of the last drawn FEN (no game history on the page, so no threefold check).
+  let drawFen: string | null = null;
+  let isDrawn = false;
+
   const draw = (snap: BoardSnapshot, fen: string | null) => {
     const rect = snap.boardEl.getBoundingClientRect();
     if (rect.width === 0) return overlay.hide();
@@ -119,12 +123,17 @@ async function start(): Promise<void> {
       settings.showArrow && hints
         ? shown.map((c) => ({ ...squares(c.uciMove), color: c.color, score: c.moveScore, accent: c.rank === 1, glow: c.brilliant }))
         : [];
+    if (fen !== drawFen) {
+      drawFen = fen;
+      isDrawn = fen ? boardService.isDraw(fen) : false;
+    }
     const opening = settings.showOpening && book && fen && book.inBook(fen) ? book.openingAt(fen) : null;
     overlay.render({
       rect,
       orientation: snap.orientation,
       // Keep the previous score while the new position is being searched — less flicker.
       score: latest?.score ?? null,
+      draw: isDrawn,
       loading: !fresh || !latest!.final,
       error: errored,
       showBar: settings.showEvalBar,
