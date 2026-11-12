@@ -478,10 +478,6 @@ button:disabled {
 .piece {
   filter: var(--piece-filter);
 }
-.arrow-g {
-  opacity: 0.95;
-  filter: drop-shadow(0 0.015px 0.02px rgba(0, 0, 0, 0.45));
-}
 .arrow-frame {
   fill: none;
   stroke-width: 0.035px;
@@ -495,8 +491,15 @@ button:disabled {
 .arrow-origin {
   fill: rgba(255, 255, 255, 0.92);
 }
+.arrow-g {
+  opacity: 0.95;
+  filter: drop-shadow(0 0 0.035px var(--glow, transparent)) drop-shadow(0 0 0.1px var(--glow, transparent));
+}
 .arrow-g.glow {
-  filter: drop-shadow(0 0 0.08px #00bfff) drop-shadow(0 0 0.14px #00bfff);
+  filter: drop-shadow(0 0 0.05px var(--glow)) drop-shadow(0 0 0.16px var(--glow)) drop-shadow(0 0 0.24px var(--glow));
+}
+.arrow-badge rect {
+  filter: drop-shadow(0 0 0.06px var(--glow, transparent));
 }
 .arrow-badge text {
   font: 700 0.16px var(--font);

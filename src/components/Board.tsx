@@ -290,7 +290,7 @@ function Arrow({ arrow, orientation, part }: ArrowProps) {
   if (part === 'badge') {
     const box = shape.badgeBox;
     return (
-      <g className="arrow-badge" pointerEvents="none">
+      <g className="arrow-badge" pointerEvents="none" style={{ '--glow': arrow.color } as CSSProperties}>
         <rect x={box.x} y={box.y} width={box.width} height={box.height} rx={box.radius} fill={arrow.color} stroke="rgba(0,0,0,.35)" strokeWidth={0.02} />
         <text x={shape.badge.x} y={shape.badge.y + 0.005} fill={textColorOn(arrow.color)} textAnchor="middle" dominantBaseline="central">
           {arrow.score}
@@ -300,7 +300,7 @@ function Arrow({ arrow, orientation, part }: ArrowProps) {
   }
   const { frames } = shape;
   return (
-    <g className={`arrow-g${arrow.glow ? ' glow' : ''}`} pointerEvents="none">
+    <g className={`arrow-g${arrow.glow ? ' glow' : ''}`} pointerEvents="none" style={{ '--glow': arrow.color } as CSSProperties}>
       {frames && (
         <>
           <rect className="arrow-frame from" x={frames.from.x} y={frames.from.y} width={frames.from.size} height={frames.from.size} rx={frames.from.radius} stroke={arrow.color} />

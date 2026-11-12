@@ -13,12 +13,13 @@ const STYLE = `
 :host { all: initial; }
 .layer { position: fixed; pointer-events: none; z-index: 2147483000; font-family: var(--lca-font, system-ui, sans-serif); font-size: calc(12px * var(--lca-scale, 1)); line-height: 1.3; }
 svg.arrows { position: fixed; pointer-events: none; overflow: visible; }
-.arrow { opacity: .95; filter: drop-shadow(0 .015px .02px rgba(0,0,0,.45)); }
+.arrow { opacity: .95; filter: drop-shadow(0 0 .035px var(--glow, transparent)) drop-shadow(0 0 .1px var(--glow, transparent)); }
+.badge rect { filter: drop-shadow(0 0 .06px var(--glow, transparent)); }
 .arrow .frame { fill: none; stroke-width: .035px; }
 .arrow .frame.to { fill-opacity: .24; }
 .arrow .frame.from { stroke-opacity: .7; }
 .arrow .origin { fill: rgba(255,255,255,.92); }
-.arrow.glow { filter: drop-shadow(0 0 .08px #00bfff) drop-shadow(0 0 .14px #00bfff); }
+.arrow.glow { filter: drop-shadow(0 0 .05px var(--glow)) drop-shadow(0 0 .16px var(--glow)) drop-shadow(0 0 .24px var(--glow)); }
 .badge text { font: 700 .16px var(--lca-font, system-ui, sans-serif); }
 .bar { position: fixed; background: #3a3a3a; border-radius: 3px; overflow: hidden;
   display: flex; flex-direction: column-reverse; box-shadow: 0 0 0 1px rgba(0,0,0,.35); font-weight: 700; font-size: 9px; line-height: 1; }
@@ -226,7 +227,7 @@ function rowEl(line: OverlayLine): HTMLDivElement {
 /** Thin line from a ring to a rounded head (bent for knight moves), square frames for the best move; same opacity for all arrows. */
 function arrowEl(a: OverlayArrow, orientation: Color): SVGGElement {
   const shape = arrowShape(squareCenter(a.from, orientation), squareCenter(a.to, orientation), a.accent);
-  const g = svgEl('g', { class: `arrow${a.glow ? ' glow' : ''}` });
+  const g = svgEl('g', { class: `arrow${a.glow ? ' glow' : ''}`, style: `--glow: ${a.color}` });
   const frame = (f: SquareFrame, cls: string, fill: string) =>
     svgEl('rect', { class: `frame ${cls}`, x: String(f.x), y: String(f.y), width: String(f.size), height: String(f.size), rx: String(f.radius), stroke: a.color, fill });
   if (shape.frames) g.append(frame(shape.frames.from, 'from', 'none'), frame(shape.frames.to, 'to', a.color));
@@ -248,7 +249,7 @@ function arrowEl(a: OverlayArrow, orientation: Color): SVGGElement {
 /** 0–100 score next to the arrow, before the head. */
 function badgeEl(a: OverlayArrow, orientation: Color): SVGGElement {
   const { badge, badgeBox: box } = arrowShape(squareCenter(a.from, orientation), squareCenter(a.to, orientation), a.accent, String(a.score));
-  const g = svgEl('g', { class: 'badge' });
+  const g = svgEl('g', { class: 'badge', style: `--glow: ${a.color}` });
   g.append(
     svgEl('rect', { x: String(box.x), y: String(box.y), width: String(box.width), height: String(box.height), rx: String(box.radius), fill: a.color, stroke: 'rgba(0,0,0,.35)', 'stroke-width': '0.02' }),
     svgEl('text', { x: String(badge.x), y: String(badge.y + 0.005), fill: textColorOn(a.color), 'text-anchor': 'middle', 'dominant-baseline': 'central' }, String(a.score)),

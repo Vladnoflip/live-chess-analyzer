@@ -596,10 +596,6 @@ button.primary {
 
 /* ── Phase 3A: candidates, arrows, explanation ── */
 /* Same opacity for every arrow (group opacity, so overlapping parts don't darken). */
-.arrow-g {
-  opacity: 0.95;
-  filter: drop-shadow(0 0.015px 0.02px rgba(0, 0, 0, 0.45));
-}
 .arrow-frame {
   fill: none;
   stroke-width: 0.035px;
@@ -613,8 +609,15 @@ button.primary {
 .arrow-origin {
   fill: rgba(255, 255, 255, 0.92);
 }
+.arrow-g {
+  opacity: 0.95;
+  filter: drop-shadow(0 0 0.035px var(--glow, transparent)) drop-shadow(0 0 0.1px var(--glow, transparent));
+}
 .arrow-g.glow {
-  filter: drop-shadow(0 0 0.08px #00bfff) drop-shadow(0 0 0.14px #00bfff);
+  filter: drop-shadow(0 0 0.05px var(--glow)) drop-shadow(0 0 0.16px var(--glow)) drop-shadow(0 0 0.24px var(--glow));
+}
+.arrow-badge rect {
+  filter: drop-shadow(0 0 0.06px var(--glow, transparent));
 }
 .arrow-badge text {
   font: 700 0.16px system-ui, sans-serif;
@@ -696,7 +699,7 @@ button.primary {
   text-overflow: ellipsis;
 }
 .brilliant-badge {
-  color: #00bfff;
+  color: #00e5ff;
 }
 .explanation {
   margin-top: 10px;
@@ -731,13 +734,13 @@ button.primary {
   vertical-align: 1px;
 }
 .score-dot.glow {
-  box-shadow: 0 0 6px #00bfff;
+  box-shadow: 0 0 6px #00e5ff;
 }
 .cls-brilliant .badge {
-  color: #00bfff;
+  color: #00e5ff;
 }
 .move.cls-brilliant {
-  color: #00bfff;
+  color: #00e5ff;
 }
 .segmented-row {
   display: flex;

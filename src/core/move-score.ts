@@ -44,7 +44,7 @@ export function moveScore(mover: Color, best: Score, candidate: Score): number {
 
 // ───────────────────────────── colour scale ─────────────────────────────
 
-export const BRILLIANT_COLOR = '#00bfff';
+export const BRILLIANT_COLOR = '#00e5ff';
 
 /** Gradient stops; colours are interpolated linearly in RGB between neighbours. */
 export const COLOR_STOPS: readonly (readonly [score: number, hex: string])[] = [
@@ -52,7 +52,7 @@ export const COLOR_STOPS: readonly (readonly [score: number, hex: string])[] = [
   [25, '#e67e22'],
   [50, '#f1c40f'],
   [75, '#2ecc71'],
-  [100, '#00bfff'],
+  [100, '#00e5ff'],
 ];
 
 export function scoreToColor(score: number, brilliant = false): string {
@@ -82,14 +82,14 @@ function parseHex(hex: string): [number, number, number] {
 
 /**
  * Discrete arrow colours (and the matching variant rows): a move's arrow shows which
- * band it falls into rather than a blend. Brilliant moves are always blue.
+ * band it falls into rather than a blend. Neon tones, drawn with a soft glow. Brilliant moves are always cyan.
  */
 export const ARROW_STEPS: readonly (readonly [minScore: number, hex: string, label: string])[] = [
-  [90, '#00a650', 'dark green'],
-  [75, '#2fe06f', 'green'],
-  [50, '#ffd400', 'yellow'],
-  [25, '#ff8a00', 'orange'],
-  [0, '#ff3b30', 'red'],
+  [90, '#00ff9d', 'neon green'],
+  [75, '#b6ff3b', 'lime'],
+  [50, '#ffee32', 'yellow'],
+  [25, '#ff9f1c', 'orange'],
+  [0, '#ff2e63', 'red'],
 ];
 
 export function scoreToStepColor(score: number, brilliant = false): string {

@@ -5,7 +5,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Changed
-- **Arrows** were restyled: a thin line (7–9% of a square) starting at a small ring on the source square, a compact head with rounded corners that stops 0.3 squares before the target centre, and rounded frames around the source and target squares of the best/selected move (the target frame is lightly filled). Score badges are now small rectangles with slightly rounded corners, sized to the number of digits, and sit beside the line, so one-square arrows are no longer hidden under them. Shared by the web board, the trainer and the extension overlay.
+- **Arrows** were restyled: a thin line (7–9% of a square) starting at a small ring on the source square, a compact head with rounded corners that stops 0.3 squares before the target centre, and rounded frames around the source and target squares of the best/selected move (the target frame is lightly filled). Score badges are now small rectangles with slightly rounded corners, sized to the number of digits, centred on the line just before the head.
+- **Neon colours.** The score steps are neon red `#ff2e63`, orange `#ff9f1c`, yellow `#ffee32`, lime `#b6ff3b` and green `#00ff9d`, with cyan `#00e5ff` for brilliant moves. Every arrow and badge has a soft glow in its own colour (stronger for brilliant moves). Shared by the web board, the trainer and the extension overlay.
 
 ## [0.7.0] — Draws, PGN export, lichess import, themes, heatmap, Guess the move
 

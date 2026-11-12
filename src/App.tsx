@@ -292,10 +292,10 @@ function guessArrows(state: GuessState | null): CandidateArrow[] {
     accent: rank === 1,
     glow: false,
   });
-  const game = arrow(last.gameUci, '#00a650', 100, 1);
+  const game = arrow(last.gameUci, '#00ff9d', 100, 1);
   if (last.verdict === 'match') return [game];
   const userScore = last.verdict === 'good' ? 90 : 25;
-  return [game, arrow(last.userUci, last.verdict === 'good' ? '#2fe06f' : '#ff3b30', userScore, 2)];
+  return [game, arrow(last.userUci, last.verdict === 'good' ? '#b6ff3b' : '#ff2e63', userScore, 2)];
 }
 
 function explanationTitle(state: AnalysisState, t: (key: MessageKey, params?: MessageParams) => string): string | null {

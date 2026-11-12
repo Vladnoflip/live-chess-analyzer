@@ -189,7 +189,7 @@ describe('MultiPV with the real engine (integration)', () => {
     const cands = buildCandidates(LEGAL, result.lines, board);
     expect(cands[0]!.uciMove).toBe('f3e5');
     expect(cands[0]!.brilliant).toBe(true);
-    expect(cands[0]!.color).toBe('#00bfff');
+    expect(cands[0]!.color).toBe('#00e5ff');
     expect(cands.slice(1).every((c) => !c.brilliant)).toBe(true);
   });
 

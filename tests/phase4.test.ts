@@ -127,16 +127,16 @@ describe('drill progress persistence', () => {
 
 describe('arrow colour steps', () => {
   it.each([
-    [0, '#ff3b30'],
-    [24, '#ff3b30'],
-    [25, '#ff8a00'],
-    [49, '#ff8a00'],
-    [50, '#ffd400'],
-    [74, '#ffd400'],
-    [75, '#2fe06f'],
-    [89, '#2fe06f'],
-    [90, '#00a650'],
-    [100, '#00a650'],
+    [0, '#ff2e63'],
+    [24, '#ff2e63'],
+    [25, '#ff9f1c'],
+    [49, '#ff9f1c'],
+    [50, '#ffee32'],
+    [74, '#ffee32'],
+    [75, '#b6ff3b'],
+    [89, '#b6ff3b'],
+    [90, '#00ff9d'],
+    [100, '#00ff9d'],
   ])('score %d -> %s', (score, hex) => {
     expect(scoreToStepColor(score)).toBe(hex);
   });
@@ -148,9 +148,9 @@ describe('arrow colour steps', () => {
 
   it('picks readable badge text', () => {
     expect(textColorOn('#1b1b1b')).toBe('#ffffff'); // dark background
-    expect(textColorOn('#ffd400')).toBe('#1b1b1b'); // yellow
-    expect(textColorOn('#00a650')).toBe('#1b1b1b'); // vivid green
-    expect(textColorOn('#00bfff')).toBe('#1b1b1b'); // blue
+    expect(textColorOn('#ffee32')).toBe('#1b1b1b'); // yellow
+    expect(textColorOn('#00ff9d')).toBe('#1b1b1b'); // vivid green
+    expect(textColorOn('#00e5ff')).toBe('#1b1b1b'); // blue
   });
 });
 
@@ -166,9 +166,9 @@ describe('arrow geometry', () => {
     expect(s.head[0].x).toBeCloseTo(4.5);
     expect(s.head[0].y).toBeGreaterThan(4.5); // stops short of e4's centre (y = 4.5)
     expect(s.badge.y).toBeGreaterThan(s.head[0].y); // badge sits before the tip
-    expect(Math.abs(s.badge.x - 4.5)).toBeGreaterThan(0.2); // and beside the line, not on it
-    // The badge rectangle does not touch the line (x = 4.5).
-    expect(s.badgeBox.x > 4.5 + s.width / 2 || s.badgeBox.x + s.badgeBox.width < 4.5 - s.width / 2).toBe(true);
+    expect(s.badge.x).toBeCloseTo(4.5); // on the line
+    // Upward arrow: the badge's top edge stays below the head's base (it does not cover the head).
+    expect(s.badgeBox.y).toBeGreaterThanOrEqual(s.head[1].y - 0.001);
     expect(s.badgeBox.radius).toBeLessThan(s.badgeBox.height / 2); // a rectangle, not a pill
   });
 
@@ -177,9 +177,10 @@ describe('arrow geometry', () => {
     const three = badgeSize('100');
     expect(three.width).toBeGreaterThan(one.width);
     expect(three.height).toBe(one.height);
-    // Horizontal arrow: the badge sits above or below the line without touching it.
+    // Horizontal arrow: the badge is centred on the line, before the head.
     const s = arrowShape(squareCenter('a4', 'w'), squareCenter('e4', 'w'), true, '100');
-    expect(s.badgeBox.y > 4.5 + s.width / 2 || s.badgeBox.y + s.badgeBox.height < 4.5 - s.width / 2).toBe(true);
+    expect(s.badge.y).toBeCloseTo(4.5);
+    expect(s.badgeBox.x + s.badgeBox.width).toBeLessThanOrEqual(s.head[1].x);
   });
 
   it('bends knight arrows along the long leg first', () => {
