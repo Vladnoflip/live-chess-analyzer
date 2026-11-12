@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the latest release (currently 0.6.x) receives fixes.
+Only the latest release (currently 0.7.x) receives fixes.
 
 ## Reporting a vulnerability
 
@@ -19,6 +19,7 @@ You should receive an acknowledgement within 7 days. Once a fix is released, the
 
 - Code execution or data access through the extension, for example a malicious page abusing the content script or the extension messaging.
 - Any way to make the extension send network requests, or read data beyond the chess board on allowed pages.
+- Any way to make the web app send a request other than the user-triggered lichess import, or send that request without the user pressing the button.
 - **Any way to make the extension run on pages outside its whitelist**, especially games against human players. A bypass of the fair-play guards is treated as a security issue.
 
 ### Out of scope

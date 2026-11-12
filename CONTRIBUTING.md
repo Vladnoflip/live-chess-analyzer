@@ -4,7 +4,7 @@ Thanks for helping. This guide covers the local setup, the checks every change h
 
 ## Ground rule: fair play
 
-This project must never help anyone during games against human players. Pull requests that weaken the page guards in `extension/platforms/` will not be accepted. That includes enabling live or online game pages, removing the board-id check, or turning the guards into a setting. Requests to add network access, telemetry or remote engines will not be accepted either.
+This project must never help anyone during games against human players. Pull requests that weaken the page guards in `extension/platforms/` will not be accepted. That includes enabling live or online game pages, removing the board-id check, or turning the guards into a setting. Requests to add network access (beyond the existing optional, user-triggered lichess import in the web app), telemetry or remote engines will not be accepted either.
 
 ## Setup
 
@@ -42,7 +42,7 @@ If a change affects the UI shown in the README, re-capture the images with `npm 
 - The app and the extension share `engine.service`, `board.service` and the scoring and opening modules. Keep them free of DOM and `chrome.*` APIs.
 - Write comments only where the logic is not obvious, in English.
 - UI text goes into both `src/locales/en.json` and `src/locales/ru.json` with the same key. Never hard-code UI strings in components. Core modules return `{ key, params }` messages, and components render them with `useI18n()`.
-- No network calls at runtime. Data such as the opening book is bundled.
+- No network calls at runtime. Data such as the opening book is bundled. The only exception is the optional lichess game import in the web app (`src/services/lichess-import.ts`), sent only when the user presses its button; the extension must never include it.
 
 ## Pull requests
 

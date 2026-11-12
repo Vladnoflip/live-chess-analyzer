@@ -8,7 +8,7 @@ Local chess analysis with Stockfish 18 (WASM): a MultiPV analyzer with 0–100 m
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](tsconfig.json)
 [![Chrome MV3](https://img.shields.io/badge/Chrome-Manifest%20V3-4285F4.svg?logo=googlechrome&logoColor=white)](extension/manifest.ts)
 
-Everything runs on your machine. The engine is Stockfish compiled to WebAssembly and runs in a Web Worker; there is no server and no network traffic. The interface is available in English and Russian.
+Everything runs on your machine. The engine is Stockfish compiled to WebAssembly and runs in a Web Worker, and there is no server. The web app makes exactly one network request, and only when you ask for it: the optional import of your recent lichess games. The extension makes none. The interface is available in English and Russian.
 
 Repository: `https://github.com/Vladnoflip/live-chess-analyzer`
 
@@ -60,6 +60,16 @@ Extension permissions: `storage` (settings) and `offscreen` (engine host), plus 
 - **Opening explorer**: search with autocomplete. Type "Najdorf", "Evans", "B90" or Russian words such as «Найдорф», and the chosen line is played on the board. A collapsible name tree goes from family to variation to sub-variation (Sicilian Defense → Najdorf Variation → English Attack); the path to the current opening opens automatically. Book moves can be filtered by ECO range, name and side.
 - **Opening trainer** with 19 sections in tabs: *Gambits* (King's, Queen's, Evans, Benko, Budapest, Muzio and all gambits), *Indian* (Nimzo-Indian, King's Indian, Queen's Indian, Grünfeld and all Indian defences), *Semi-open* (Sicilian, French, Caro-Kann, Alekhine, Scandinavian), *Closed* (Slav) and *All*. Every section shows how many book lines it trains (see [Trainer sections](#trainer-sections)). Any book move counts as correct. Progress — the current line and lifetime statistics per section — is saved in `localStorage` and restored when you reopen the trainer.
 - **Standalone trainer site** inside the extension, opened from the popup. It has a soft paper-and-sage theme with automatic dark mode and the cburnett pieces used by lichess.
+- **Draw detection.** Stalemate, insufficient material, the fifty-move rule and threefold repetition (from the game history) are recognised with chess.js. A drawn position shows **0.00** on a grey eval bar with a *Draw* badge and the reason, and the engine is not asked. In UCI, `score mate 0` means the side to move is checkmated; stalemate comes as `cp 0`, and any score in a drawn position is forced to exactly 0.00.
+- **Arrows** with a round tail and a softly rounded head, 20–24% of a square wide. The tip stops short of the target square's centre so the piece stays visible; knight arrows bend into an L. The web board, the trainer and the extension overlay share the same geometry.
+- **Annotated PGN export.** After *Review game*, *Export PGN* downloads the game with a comment per move: `{?? Blunder: Loses a piece (~3.0 pawns). Best was Nc6 [%eval 8.50]}`, `{!! Brilliant move [%eval 1.66]}`. Comments follow the UI language; `[%eval]` uses the lichess/chess.com format.
+- **Lichess import (web app only, optional).** Enter a lichess username to load the last 10 games (`https://lichess.org/api/games/user/{name}?max=10&pgnInJson=true`), then *Review all* to analyse them one by one with a blunder/mistake/inaccuracy count per game. The panel warns that this is the only network request in the app. The extension has no such button and no extra permissions.
+- **Board themes**: Classic, Wood, Neon and Soft, built from CSS custom properties. Choose one under *Engine settings → Board theme* in the web app, or *Trainer board theme* in the extension popup.
+- **Mistake heatmap.** After a review, *Show heatmap* colours the squares that mistakes and blunders were played to: the more often a square was hit, the redder it is.
+- **Guess the move.** Load a PGN (or use the game on the board), pick a side and play its moves. A guess counts if it is the game move or if Stockfish rates it no more than 0.50 worse; otherwise the game move and both evaluations are shown, with arrows.
+- **Bilingual UI: auto-detects system language (English/Russian) with manual override.** A Russian system language (`navigator.language`) gives the Russian UI; any other language gives English. You can override this under *Engine settings → Language* in the web app and in the extension popup (*Language*). All texts live in `src/locales/en.json` and `src/locales/ru.json`.
+- **Move sounds**, synthesized with Web Audio (no audio files).
+- **Chrome extension (Manifest V3).** Eval bar, candidate arrows with score badges, a variants panel, the opening indicator, a "hints only on my turn" option, a depth cap, a font family and text size setting, a language setting and a board theme for the trainer page.
 
 ### Where trainer progress is stored (not synchronized)
 
@@ -70,22 +80,20 @@ The trainer exists in two builds that share the same code (`src/core/drill.manag
 | Web app (`dist/`) | *Trainer* mode inside `index.html` (there is no separate `trainer.html`) | `localStorage` of the site's origin, e.g. `http://localhost:5173` or the GitHub Pages URL |
 | Extension (`dist-extension/`) | `extension/trainer.html`, opened from the popup | `localStorage` of `chrome-extension://<extension id>` |
 
-**Progress is not synchronized between the web app and the extension.** Browsers isolate `localStorage` per origin, so each build keeps its own line and statistics. The same applies to different web origins: the dev server, `npm run preview` and GitHub Pages each have their own progress. Sharing progress would need either a server or extra extension permissions on the web app's origin, and the project deliberately has neither: there are no network requests and only the chess.com and lichess.org host permissions.
+**Progress is not synchronized between the web app and the extension.** Browsers isolate `localStorage` per origin, so each build keeps its own line and statistics. The same applies to different web origins: the dev server, `npm run preview` and GitHub Pages each have their own progress. Sharing progress would need either a server or extra extension permissions on the web app's origin, and the project deliberately has neither: there is no server, and the extension only has the chess.com and lichess.org host permissions.
 
-The extension's own settings (overlay, depth, font, language, etc.) are a separate store in `chrome.storage.sync`. The trainer page reads the font and language settings from there. The web app keeps its language choice in `localStorage` (`livechess.locale.v1`).
-- **Bilingual UI: auto-detects system language (English/Russian) with manual override.** A Russian system language (`navigator.language`) gives the Russian UI; any other language gives English. You can override this under *Engine settings → Language* in the web app and in the extension popup (*Language*). All texts live in `src/locales/en.json` and `src/locales/ru.json`.
-- **Move sounds**, synthesized with Web Audio (no audio files).
-- **Chrome extension (Manifest V3).** Eval bar, candidate arrows with score badges, a variants panel, the opening indicator, a "hints only on my turn" option, a depth cap, a font family and text size setting, and a language setting.
+The extension's own settings (overlay, depth, font, language, board theme, etc.) are a separate store in `chrome.storage.sync`. The trainer page reads the font, language and board theme from there. The web app keeps its language choice in `localStorage` (`livechess.locale.v1`) and its board theme in `livechess.boardTheme.v1`.
 
 ## Demo / How to use
 
 **Web app** (`npm run dev`, then open http://localhost:5173):
 
-1. **Analysis**: paste a FEN or a PGN and watch the eval bar, the arrows and the variants panel. Click a variant to see its explanation. Press *Review game* to score every move of a loaded game.
+1. **Analysis**: paste a FEN or a PGN and watch the eval bar, the arrows and the variants panel. Click a variant to see its explanation. Press *Review game* to score every move of a loaded game, then *Export PGN* to save it with annotations or *Show heatmap* to see where the errors were. To review your own lichess games, type your username under *Import from lichess* (optional; this is the app's only network request).
 2. **Openings**: walk the opening tree. Each book move shows its name and ECO code.
 3. **Trainer**: pick a section and a colour, then play the book moves by dragging or clicking.
+4. **Guess the move**: paste a PGN or use the game on the board, choose White or Black and press *Start*. Make your move on the board; *Next move* continues the game.
 
-The UI language follows your system; change it under *Engine settings → Language*.
+The UI language follows your system; change it under *Engine settings → Language*. The board theme is under *Engine settings → Board theme*.
 
 **Extension:**
 
@@ -128,10 +136,12 @@ After a rebuild, press the reload icon on the extension card.
 ```
 src/
   services/         engine.service (UCI over a transport, MultiPV, cancellation), engine.transport (Web Worker),
-                    uci.parser, board.service (chess.js wrapper: FEN, legal moves, SAN/UCI, PGN, SEE), sound.service
+                    uci.parser, board.service (chess.js wrapper: FEN, legal moves, SAN/UCI, PGN, SEE, draws),
+                    sound.service, lichess-import (web app only: the single optional network request)
   core/             analysis.manager (state, cache, candidates, explanations), move-score, candidates,
-                    move-explainer, classification, openings, opening.explorer, drill.manager, i18n,
-                    arrow-geometry, piece-tracking, observable (Store / Emitter)
+                    move-explainer, classification, openings, opening.explorer, drill.manager, guess.manager,
+                    pgn-export, heatmap, board-themes, i18n, arrow-geometry, piece-tracking,
+                    observable (Store / Emitter)
   components/       React UI only: Board, EvalBar, VariantsPanel, MoveList, DrillPanel, OpeningExplorerPanel, …
   locales/          UI dictionaries: en.json and ru.json (same keys, checked by TypeScript and tests)
   data/openings/    lichess-org/chess-openings TSV files (CC0) and the generated openings.json
@@ -244,6 +254,10 @@ The best move always scores 100. An inaccuracy (10–20 pp) lands between 55 and
 - **Trainer progress is per build and per origin.** The web app and the extension do not share it; see [Where trainer progress is stored](#where-trainer-progress-is-stored-not-synchronized).
 - **Promotion** by click or drag always promotes to a queen; under-promotions in loaded PGNs are handled correctly.
 - **Languages.** The UI is in English and Russian only. Opening names come from the lichess book and are always in English.
+- **Draws in the extension.** The overlay sees a single position, not the game history, so it detects stalemate and insufficient material but not threefold repetition or the fifty-move rule (move counters are not visible on the page).
+- **Board themes in the extension** apply to the trainer page. The overlay draws on top of the site's own board, which keeps the site's colours.
+- **Lichess import** is limited to the last 10 games of a public account and is subject to lichess API rate limits (the app shows a message and you can retry a minute later). It is not available in the extension.
+- **Guess the move** compares your move with the game move at depth 12 with a fixed 0.50 tolerance. If the game move was itself a mistake, any reasonable move counts.
 
 ## Contributing
 
@@ -255,7 +269,7 @@ LiveChess Analyzer is built in spare time, out of enthusiasm for chess and open 
 
 You can support the project via Boosty (works worldwide and with Russian cards): **https://boosty.to/vladnoflip/donate**. The *Sponsor* button at the top of this repository leads to the same page.
 
-The web app footer, the extension popup and the trainer page each have a small *❤️ Support the Project* link to the same Boosty page. It is an ordinary link that opens in a new tab when you click it: no extra extension permissions, and the app and the extension still make no network requests of their own.
+The web app footer, the extension popup and the trainer page each have a small *❤️ Support the Project* link to the same Boosty page. It is an ordinary link that opens in a new tab when you click it: no extra extension permissions and no requests made by the app or the extension.
 
 ## License & Acknowledgements
 

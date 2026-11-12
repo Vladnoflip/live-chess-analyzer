@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.0] — Draws, PGN export, lichess import, themes, heatmap, Guess the move
+
+### Added
+- **Annotated PGN export.** *Export PGN* (next to *Review game*) downloads the reviewed game with a comment per move: the classification symbol and label, the main reason from the move explainer and the best move for inaccuracies, mistakes and blunders (`{?! Inaccuracy: Loses a pawn. Best was Nf3 [%eval 0.35]}`), `{!! Brilliant move}`, and a `[%eval]` tag that lichess and chess.com understand. Comments follow the UI language.
+- **Lichess import (web app only).** A *Lichess username* field loads the last 10 games from `https://lichess.org/api/games/user/{name}?max=10&pgnInJson=true`. *Review all* analyses them one after another and lists blunders, mistakes and inaccuracies per game; clicking a game opens and reviews it. The panel states that this is the only network request in the app and that it is optional. The extension has no such button and no new permissions; a unit test and the e2e suite check this.
+- **Board themes**: Classic, Wood, Neon and Soft, as CSS custom properties shared by the web board and the trainer page. Neon outlines pieces with a glow so black pieces stay readable; tests check piece/square contrast for every theme. Web app: *Engine settings → Board theme* (saved in `localStorage`). Extension: *Trainer board theme* in the popup (saved in `chrome.storage.sync`, applied live).
+- **Mistake heatmap.** After a review, *Show heatmap* colours the destination squares of mistakes and blunders with a semi-transparent red overlay; the more often a square was hit, the redder it is.
+- **Guess the move** mode. Load a PGN or use the game on the board, choose a side and play its moves while the rest of the game and the engine stay hidden. A guess succeeds if it is the game move or Stockfish rates it at most 0.50 worse for the side to move; otherwise the game move and both evaluations are shown with green and red arrows. The panel tracks progress and the share of moves found.
+- Draw texts ("Draw" / «Ничья» and the reasons) and all new UI texts in `en.json` and `ru.json`.
+
+### Changed
+- **Arrows** were redrawn: a round tail, a filled head with softly rounded corners, a shaft 20–24% of a square wide (24% for the accented arrow), and a tip that stops 0.2 squares before the target centre so the piece stays visible. The web board, the trainer and the extension overlay share the geometry.
+- `AnalysisManager` gains `loadGame()` and `evaluate()`, and the board service gains `isDraw()`, `isStalemate()`, `isThreefoldRepetition()`, `isInsufficientMaterial()` and `drawReason()`.
+- README, CONTRIBUTING and SECURITY describe the single optional network request of the web app; the extension still makes none.
+
+### Fixed
+- **Draws.** Stalemate, insufficient material, the fifty-move rule and threefold repetition (detected from the game history) are now shown as **0.00** on a grey eval bar with a *Draw* badge and the reason, without asking the engine, and the move explanation says why the game is drawn. The extension overlay shows the grey 0.00 bar for stalemate and insufficient material too (it sees neither the game history nor the move counters).
+- UCI scores are reconciled with chess.js: `mate 0` stays checkmate of the side to move, while stalemate (`cp 0`, or `mate 0` from engines that send it) and every other drawn position become exactly 0.00. A Black-to-move `cp 0` no longer turns into `-0`.
+
 ## [0.6.2] — Boosty donation link
 
 ### Fixed
@@ -116,6 +135,7 @@ Expanded opening book and granular trainer categories.
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.7.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.0
 [0.6.2]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.2
 [0.6.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.1
 [0.6.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.0
