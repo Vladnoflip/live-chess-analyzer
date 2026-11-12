@@ -12,6 +12,7 @@ import { openingContext } from './core/openings';
 import { SoundService, bindSounds } from './services/sound.service';
 import { I18n } from './core/i18n';
 import { BoardThemeStore } from './core/board-themes';
+import { GUESS_DEPTH, GuessManager } from './core/guess.manager';
 import './styles.css';
 
 const flavor = pickEngineFlavor();
@@ -37,6 +38,12 @@ const sound = new SoundService(safeLocalStorage());
 // UI language: navigator.language unless the user picked one in the settings.
 const i18n = new I18n(navigator.language, safeLocalStorage());
 const boardTheme = new BoardThemeStore('classic', safeLocalStorage());
+const guess = new GuessManager({
+  board: boardService,
+  load: (game) => manager.loadGame(game),
+  goTo: (ply) => manager.goTo(ply),
+  evaluate: (fen) => manager.evaluate(fen, GUESS_DEPTH),
+});
 bindSounds(sound, manager, drill);
 // Audio may only start after a user gesture; any click or key unlocks it.
 window.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
@@ -56,7 +63,7 @@ if (!root) throw new Error('#root not found');
 
 createRoot(root).render(
   <StrictMode>
-    <AnalysisContext.Provider value={{ manager, explorer, drill, sound, i18n, boardTheme }}>
+    <AnalysisContext.Provider value={{ manager, explorer, drill, sound, i18n, boardTheme, guess }}>
       <App />
     </AnalysisContext.Provider>
   </StrictMode>,

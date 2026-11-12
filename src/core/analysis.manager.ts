@@ -5,7 +5,7 @@ import { buildCandidates, isBrilliant, type Candidate } from './candidates';
 import { moveScore } from './move-score';
 import { explainMove, type Explanation, type OpeningContext } from './move-explainer';
 import { MATED_CP, type EngineSettings, type MoveClass, type Score, type SearchInfo, type SearchResult } from './types';
-import { BoardService, PgnParseError, START_FEN, type BoardPiece, type DrawReason, type GameMove } from '../services/board.service';
+import { BoardService, PgnParseError, START_FEN, type BoardPiece, type DrawReason, type GameMove, type ParsedGame } from '../services/board.service';
 import { resolveTerminalScore } from '../services/uci.parser';
 import { msg, type Msg } from './i18n';
 import { EngineService, MAX_MULTIPV, SearchCancelledError } from '../services/engine.service';
@@ -480,6 +480,28 @@ export class AnalysisManager extends Store<AnalysisState> {
         this.analyzeCurrent();
       }
     }
+  }
+
+  /** Loads an already parsed game (used by the guess-the-move mode). */
+  loadGame(game: ParsedGame): void {
+    this.resetGame(game.startFen, game.moves, game.headers);
+    this.setState({ pgnError: null });
+  }
+
+  /**
+   * White-POV evaluation of `fen` at `depth` (cache first). Used by the guess-the-move
+   * mode; it takes over the engine, so the live search of the shown position stops.
+   */
+  async evaluate(fen: string, depth: number): Promise<Score> {
+    const terminal = this.terminalEval(fen, this.board.drawReason(fen));
+    if (terminal) return terminal.score;
+    const cached = this.getState().evals[fen];
+    if (cached && cached.depth >= depth) return cached.score;
+    if (!this.engineReady) throw new Error('engine is not ready');
+    const ev = this.evalFromResult(fen, await this.engine.analyze(fen, { depth }), this.getState().settings.multiPv);
+    if (!ev) throw new Error('engine returned no evaluation');
+    this.storeEval(fen, ev);
+    return ev.score;
   }
 
   cancelReview(): void {

@@ -6,6 +6,7 @@ import type { SoundService, SoundSettings } from '../services/sound.service';
 import type { I18n, I18nState, MessageKey, MessageParams, Msg } from '../core/i18n';
 import { translate, translateMsg } from '../core/i18n';
 import type { BoardTheme, BoardThemeStore } from '../core/board-themes';
+import type { GuessManager, GuessState } from '../core/guess.manager';
 
 export interface AppServices {
   readonly manager: AnalysisManager;
@@ -14,6 +15,8 @@ export interface AppServices {
   readonly sound: SoundService;
   readonly i18n: I18n;
   readonly boardTheme: BoardThemeStore;
+  /** Guess-the-move mode (web app only). */
+  readonly guess?: GuessManager;
 }
 
 export const AnalysisContext = createContext<AppServices | null>(null);
@@ -72,4 +75,12 @@ export function useBoardTheme(): { theme: BoardTheme; setTheme(theme: BoardTheme
   const { boardTheme } = useServices();
   const { theme } = useSyncExternalStore(boardTheme.subscribe, boardTheme.getState);
   return { theme, setTheme: (t) => boardTheme.setTheme(t) };
+}
+
+const IDLE_GUESS_SUBSCRIBE = () => () => {};
+
+/** Guess-the-move state, or null where the mode isn't available (extension trainer). */
+export function useGuess(): GuessState | null {
+  const { guess } = useServices();
+  return useSyncExternalStore(guess?.subscribe ?? IDLE_GUESS_SUBSCRIBE, () => guess?.getState() ?? null);
 }

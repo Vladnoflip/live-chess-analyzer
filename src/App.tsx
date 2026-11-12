@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Square } from 'chess.js';
-import { useAnalysis, useDrill, useExplorer, useI18n, useServices } from './hooks/useAnalysis';
-import type { AnalysisState } from './core/analysis.manager';
+import { useAnalysis, useDrill, useExplorer, useGuess, useI18n, useServices } from './hooks/useAnalysis';
+import type { AnalysisState, CandidateArrow } from './core/analysis.manager';
+import type { GuessState } from './core/guess.manager';
+import { GuessPanel } from './components/GuessPanel';
+import { msg, type Msg } from './core/i18n';
+import { PgnParseError } from './services/board.service';
 import type { MessageKey, MessageParams } from './core/i18n';
 import { START_FEN, boardService } from './services/board.service';
 import { exportAnnotatedPgn, pgnFileName } from './core/pgn-export';
@@ -20,16 +24,19 @@ import { DrillPanel } from './components/DrillPanel';
 import { SupportLink } from './components/SupportLink';
 import { DRILL_SECTIONS, sectionLineCount } from './core/drill.manager';
 
-type Mode = 'analysis' | 'explorer' | 'drill';
+type Mode = 'analysis' | 'explorer' | 'drill' | 'guess';
 
 const MODES: readonly { id: Mode; title: MessageKey }[] = [
   { id: 'analysis', title: 'mode.analysis' },
   { id: 'explorer', title: 'mode.explorer' },
   { id: 'drill', title: 'mode.drill' },
+  { id: 'guess', title: 'mode.guess' },
 ];
 
 export function App() {
-  const { manager, explorer, drill } = useServices();
+  const { manager, explorer, drill, guess } = useServices();
+  const guessState = useGuess();
+  const [guessPgnError, setGuessPgnError] = useState<Msg | null>(null);
   const state = useAnalysis();
   const explorerState = useExplorer();
   const drillState = useDrill();
@@ -60,12 +67,15 @@ export function App() {
   const drilling = mode === 'drill' && drillState.status !== 'idle';
   const heatmap = useMemo(() => mistakeHeatmap(state.moves, state.classes), [state.moves, state.classes]);
   const heatmapVisible = showHeatmap && mode === 'analysis' && Object.keys(state.classes).length > 0;
-  const hintsHidden = drilling && !drillState.hintsVisible;
+  // While guessing, the engine and the rest of the game stay hidden until the game is over.
+  const guessing = mode === 'guess' && guessState !== null && guessState.status !== 'idle' && guessState.status !== 'finished';
+  const hintsHidden = (drilling && !drillState.hintsVisible) || guessing;
+  const locked = drilling || guessing;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) return;
-      if (drilling && e.key !== 'f') return;
+      if (locked && e.key !== 'f') return;
       if (e.key === 'ArrowLeft') manager.prev();
       else if (e.key === 'ArrowRight') manager.next();
       else if (e.key === 'Home') manager.goTo(0);
@@ -76,9 +86,14 @@ export function App() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [manager, drilling]);
+  }, [manager, locked]);
 
   const onBoardMove = (from: Square, to: Square) => {
+    if (guessing) {
+      const uci = manager.resolveMove(from, to);
+      if (uci) void guess?.guess(uci);
+      return;
+    }
     if (drilling) {
       const uci = manager.resolveMove(from, to);
       if (uci) drill.tryMove(uci);
@@ -90,6 +105,8 @@ export function App() {
   const switchMode = (next: Mode) => {
     // Leaving the trainer only pauses it: the line is saved and resumed on return.
     if (mode === 'drill' && next !== 'drill') drill.pause();
+    // Leaving the guessing game ends it (the position on the board stays).
+    if (mode === 'guess' && next !== 'guess') guess?.stop();
     setMode(next);
   };
 
@@ -131,14 +148,14 @@ export function App() {
             <Board
               pieces={pieces}
               flipped={flipped}
-              arrows={hintsHidden ? [] : manager.candidateArrows()}
+              arrows={guessing ? guessArrows(guessState) : hintsHidden ? [] : manager.candidateArrows()}
               pvMarks={hintsHidden ? [] : manager.pvPreview()}
               lastMove={manager.lastMove()}
               heatmap={heatmapVisible ? heatmap : undefined}
               targetsFrom={targetsFrom}
               onMove={onBoardMove}
             />
-            {!drilling && (
+            {!locked && (
               <div className="nav">
                 <button onClick={() => manager.goTo(0)} title={t('nav.first')}>⏮</button>
                 <button onClick={() => manager.prev()} title={t('nav.prev')}>◀</button>
@@ -167,6 +184,32 @@ export function App() {
               onPreset={(filter) => explorer.resetFilter(filter)}
             />
           )}
+          {mode === 'guess' && guess && guessState && (
+            <GuessPanel
+              state={guessState}
+              accuracy={guess.accuracy()}
+              hasLoadedGame={state.moves.length > 0}
+              pgnError={guessPgnError}
+              onStartPgn={(pgn, side) => {
+                try {
+                  const game = boardService.parsePgn(pgn);
+                  setGuessPgnError(null);
+                  setFlipped(side === 'b');
+                  guess.start(game, side);
+                } catch (e) {
+                  const detail = e instanceof PgnParseError ? e.detail : e instanceof Error ? e.message : String(e);
+                  setGuessPgnError(msg('pgn.error', { detail }));
+                }
+              }}
+              onStartLoaded={(side) => {
+                setGuessPgnError(null);
+                setFlipped(side === 'b');
+                guess.start({ startFen: state.startFen, moves: state.moves, headers: state.headers }, side);
+              }}
+              onNext={() => void guess.next()}
+              onStop={() => guess.stop()}
+            />
+          )}
           {mode === 'drill' && (
             <DrillPanel
               state={drillState}
@@ -192,13 +235,14 @@ export function App() {
             />
           )}
           <MoveList
-            moves={state.moves}
-            classes={state.classes}
-            moveScores={state.moveScores}
+            moves={guessing ? state.moves.slice(0, state.ply) : state.moves}
+            classes={guessing ? {} : state.classes}
+            moveScores={guessing ? {} : state.moveScores}
             bookPlies={bookPlies}
             ply={state.ply}
             review={state.review}
-            onSelect={(ply) => !drilling && manager.goTo(ply)}
+            readOnly={guessing}
+            onSelect={(ply) => !locked && manager.goTo(ply)}
             onReview={() => void manager.reviewGame()}
             onCancelReview={() => manager.cancelReview()}
             heatmap={mode === 'analysis' ? { on: showHeatmap, squares: heatmap.length, onToggle: setShowHeatmap } : undefined}
@@ -233,6 +277,25 @@ export function App() {
       </footer>
     </div>
   );
+}
+
+/** After a guess: the game move in green, a different guess in red (or green if good). */
+function guessArrows(state: GuessState | null): CandidateArrow[] {
+  const last = state?.status === 'feedback' ? state.last : null;
+  if (!last) return [];
+  const arrow = (uci: string, color: string, score: number, rank: number): CandidateArrow => ({
+    from: uci.slice(0, 2) as Square,
+    to: uci.slice(2, 4) as Square,
+    color,
+    rank,
+    score,
+    accent: rank === 1,
+    glow: false,
+  });
+  const game = arrow(last.gameUci, '#00a650', 100, 1);
+  if (last.verdict === 'match') return [game];
+  const userScore = last.verdict === 'good' ? 90 : 25;
+  return [game, arrow(last.userUci, last.verdict === 'good' ? '#2fe06f' : '#ff3b30', userScore, 2)];
 }
 
 function explanationTitle(state: AnalysisState, t: (key: MessageKey, params?: MessageParams) => string): string | null {

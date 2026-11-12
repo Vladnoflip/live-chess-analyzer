@@ -295,6 +295,28 @@ textarea.invalid {
   margin-top: 6px;
   font-size: 13px;
 }
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.guess-setup,
+.guess-play {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guess-prompt {
+  margin: 0;
+  font-weight: 600;
+}
+.guess-feedback p {
+  margin: 0 0 4px;
+}
+.guess-result {
+  margin: 0;
+  font-weight: 600;
+}
 .moves-actions {
   display: inline-flex;
   gap: 6px;
