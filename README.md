@@ -2,7 +2,7 @@
 
 Local chess analysis with Stockfish 18 (WASM): a MultiPV analyzer with 0–100 move scores, an opening explorer and trainer, and a Chrome extension that works **only against bots and on analysis pages**.
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/Vladnoflip)
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-pink)](https://boosty.to/vladnoflip/donate)
 [![CI](https://github.com/Vladnoflip/live-chess-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/Vladnoflip/live-chess-analyzer/actions/workflows/ci.yml)
 [![License: GPL-3.0](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178c6.svg?logo=typescript&logoColor=white)](tsconfig.json)
@@ -251,12 +251,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). For security issues, see [SECURITY.md](S
 
 ## Support the Project
 
-LiveChess Analyzer is built in spare time, out of enthusiasm for chess and open source. It is and will stay **completely free** under GPL-3.0: no paid features, no ads, no accounts. If it helps you, you can support further development:
+LiveChess Analyzer is built in spare time, out of enthusiasm for chess and open source. It is and will stay **completely free** under GPL-3.0: no paid features, no ads, no accounts. If it helps you, you can support further development.
 
-- **GitHub Sponsors:** https://github.com/sponsors/Vladnoflip (also the *Sponsor* button at the top of this repository).
-- **Ko-fi:** the link will be added here once the page is set up.
+You can support the project via Boosty (works worldwide and with Russian cards): **https://boosty.to/vladnoflip/donate**. The *Sponsor* button at the top of this repository leads to the same page.
 
-The web app footer, the extension popup and the trainer page each have a small *❤️ Support the Project* link. It is an ordinary link that opens in a new tab when you click it: no extra extension permissions, and the app and the extension still make no network requests of their own.
+The web app footer, the extension popup and the trainer page each have a small *❤️ Support the Project* link to the same Boosty page. It is an ordinary link that opens in a new tab when you click it: no extra extension permissions, and the app and the extension still make no network requests of their own.
 
 ## License & Acknowledgements
 

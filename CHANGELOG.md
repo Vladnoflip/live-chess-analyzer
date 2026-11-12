@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.2] — Boosty donation link
+
+### Fixed
+- Fixed: replaced GitHub Sponsors with Boosty for donation links (works in Russia).
+  - The *❤️ Support the Project* links in the web app, the extension popup and the trainer page open https://boosty.to/vladnoflip/donate. The constant is renamed to `SUPPORT_URL` in `src/core/support.ts`.
+  - `.github/FUNDING.yml`: the `github` entry is commented out, and `custom` points to Boosty.
+  - README: the *Sponsor* badge and the "Support the Project" section link to Boosty.
+  - The e2e check of the popup link now expects the Boosty URL.
+
 ## [0.6.1] — Sponsorship links
 
 Added donation and sponsorship links. The project stays completely free under GPL-3.0.
@@ -107,6 +116,7 @@ Expanded opening book and granular trainer categories.
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.6.2]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.2
 [0.6.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.1
 [0.6.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.6.0
 [0.5.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.5.1

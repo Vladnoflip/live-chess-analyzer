@@ -102,7 +102,7 @@ try {
     const a = document.querySelector('#support');
     return { href: a?.href, target: a?.target, rel: a?.rel, text: a?.textContent?.trim() };
   });
-  check('popup: support link opens GitHub Sponsors in a new tab', support.href === 'https://github.com/sponsors/Vladnoflip' && support.target === '_blank' && support.rel.includes('noopener') && support.text?.includes('Support the Project'), JSON.stringify(support));
+  check('popup: support link opens the Boosty page in a new tab', support.href === 'https://boosty.to/vladnoflip/donate' && support.target === '_blank' && support.rel.includes('noopener') && support.text?.includes('Support the Project'), JSON.stringify(support));
   await popup.close();
 
   const tab = await browser.newPage();

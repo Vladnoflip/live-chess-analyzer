@@ -1,6 +1,6 @@
 import { DEPTH_LIMITS, FONTS, loadSettings, saveSettings, type ExtensionSettings, type FontId } from './shared/settings';
 import { DICTIONARY_KEYS, isLocalePref, resolveLocale, translate, type Locale, type MessageKey } from '../src/core/i18n';
-import { SPONSOR_URL } from '../src/core/support';
+import { SUPPORT_URL } from '../src/core/support';
 
 type BoolKey = 'enabled' | 'showArrow' | 'showEvalBar' | 'onlyMyTurn' | 'showPanel' | 'showOpening';
 type NumKey = 'depth' | 'threads' | 'hashMb';
@@ -32,7 +32,7 @@ async function main(): Promise<void> {
   const settings: ExtensionSettings = await loadSettings();
 
   // A plain link opened in a new tab: no extra permission and no request made by the extension.
-  el<HTMLAnchorElement>('support').href = SPONSOR_URL;
+  el<HTMLAnchorElement>('support').href = SUPPORT_URL;
 
   const localeSelect = el<HTMLSelectElement>('locale');
   localeSelect.value = settings.locale;
