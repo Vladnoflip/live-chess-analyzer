@@ -38,6 +38,11 @@
     --shadow: 0 10px 30px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(0, 0, 0, 0.25);
     color-scheme: dark;
   }
+  /* The default Soft theme is dimmed in dark mode (theme variables are inline, hence !important). */
+  .board.theme-soft {
+    --sq-light: #b9b6a6 !important;
+    --sq-dark: #74866f !important;
+  }
 }
 
 * {
@@ -452,26 +457,26 @@ button:disabled {
   fill: var(--sq-dark);
 }
 .sq-last {
-  fill: rgba(222, 196, 120, 0.42);
+  fill: var(--sq-last);
 }
 .sq-selected {
-  fill: rgba(111, 154, 126, 0.45);
+  fill: var(--sq-selected);
 }
 .target {
-  fill: rgba(60, 70, 55, 0.22);
+  fill: var(--sq-target);
 }
 .target-capture {
   fill: none;
-  stroke: rgba(60, 70, 55, 0.28);
+  stroke: var(--sq-target);
   stroke-width: 0.08;
 }
 .coord {
   font: 600 0.18px var(--font);
-  fill: rgba(60, 60, 50, 0.5);
+  fill: var(--coord);
   pointer-events: none;
 }
 .piece {
-  filter: drop-shadow(0 0.025px 0.02px rgba(0, 0, 0, 0.22));
+  filter: var(--piece-filter);
 }
 .arrow-g {
   opacity: 0.95;

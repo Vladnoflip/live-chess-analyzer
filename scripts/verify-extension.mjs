@@ -119,6 +119,12 @@ try {
     const a = document.querySelector('#support');
     return { href: a?.href, target: a?.target, rel: a?.rel, text: a?.textContent?.trim() };
   });
+  const themeOptions = await popup.evaluate(() => [...document.querySelectorAll('#boardTheme option')].map((o) => `${o.value}:${o.textContent}`));
+  check('popup: board theme choice (Classic, Wood, Neon, Soft)', themeOptions.join() === 'classic:Classic,wood:Wood,neon:Neon,soft:Soft', themeOptions.join());
+  await popup.select('#boardTheme', 'neon');
+  await sleep(200);
+  const savedTheme = await sw.evaluate(async () => (await chrome.storage.sync.get('settings')).settings?.boardTheme);
+  check('popup: board theme is saved to settings', savedTheme === 'neon', String(savedTheme));
   check('popup: support link opens the Boosty page in a new tab', support.href === 'https://boosty.to/vladnoflip/donate' && support.target === '_blank' && support.rel.includes('noopener') && support.text?.includes('Support the Project'), JSON.stringify(support));
   await popup.close();
 
@@ -254,6 +260,14 @@ try {
   await trainer.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.textContent === 'Start training')?.click());
   await trainer.waitForFunction(() => document.querySelector('.move-strip')?.textContent?.includes('d4'), { timeout: 10000 });
   const pieces = await trainer.evaluate(() => document.querySelectorAll('image.piece').length);
+  const trainerTheme = await trainer.evaluate(() => {
+    const b = document.querySelector('svg.board');
+    return { theme: b?.dataset.theme, dark: b ? getComputedStyle(b.querySelector('.sq-dark')).fill : '' };
+  });
+  check('trainer: board uses the theme chosen in the popup', trainerTheme.theme === 'neon' && trainerTheme.dark === 'rgb(52, 59, 134)', JSON.stringify(trainerTheme));
+  await setSetting({ boardTheme: 'soft' });
+  await trainer.waitForFunction(() => document.querySelector('svg.board')?.dataset.theme === 'soft', { timeout: 5000 }).catch(() => {});
+  check('trainer: theme follows settings changes live', (await trainer.evaluate(() => document.querySelector('svg.board')?.dataset.theme)) === 'soft');
   check('trainer: board with cburnett pieces, book move played for White', pieces === 32, `${pieces} pieces`);
   await trainer.screenshot({ path: join(shotDir, 'trainer-start.png') });
 

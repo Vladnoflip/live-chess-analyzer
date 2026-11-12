@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { AppSettings } from '../core/analysis.manager';
 import { SoundControls } from './SoundControls';
-import { useI18n } from '../hooks/useAnalysis';
+import { useBoardTheme, useI18n } from '../hooks/useAnalysis';
+import { BOARD_PALETTES, BOARD_THEMES, isBoardTheme } from '../core/board-themes';
 import { isLocalePref } from '../core/i18n';
 
 interface SliderProps {
@@ -57,6 +58,7 @@ export interface SettingsPanelProps {
 
 export function SettingsPanel({ settings, maxThreads, multiThreaded, onChange }: SettingsPanelProps) {
   const { t, pref, setPref } = useI18n();
+  const { theme, setTheme } = useBoardTheme();
   return (
     <section className="panel settings-panel">
       <header className="panel-head">
@@ -74,6 +76,22 @@ export function SettingsPanel({ settings, maxThreads, multiThreaded, onChange }:
           <option value="auto">{t('lang.auto')}</option>
           <option value="en">{t('lang.en')}</option>
           <option value="ru">{t('lang.ru')}</option>
+        </select>
+      </label>
+      <label className="segmented-row language-row">
+        <span className="slider-label">{t('settings.boardTheme')}</span>
+        <select
+          className="language-select board-theme-select"
+          value={theme}
+          onChange={(e) => {
+            if (isBoardTheme(e.target.value)) setTheme(e.target.value);
+          }}
+        >
+          {BOARD_THEMES.map((id) => (
+            <option key={id} value={id}>
+              {t(BOARD_PALETTES[id].label)}
+            </option>
+          ))}
         </select>
       </label>
       <SoundControls />

@@ -1,6 +1,7 @@
 import { DEPTH_LIMITS, FONTS, loadSettings, saveSettings, type ExtensionSettings, type FontId } from './shared/settings';
 import { DICTIONARY_KEYS, isLocalePref, resolveLocale, translate, type Locale, type MessageKey } from '../src/core/i18n';
 import { SUPPORT_URL } from '../src/core/support';
+import { isBoardTheme } from '../src/core/board-themes';
 
 type BoolKey = 'enabled' | 'showArrow' | 'showEvalBar' | 'onlyMyTurn' | 'showPanel' | 'showOpening';
 type NumKey = 'depth' | 'threads' | 'hashMb';
@@ -41,6 +42,12 @@ async function main(): Promise<void> {
     if (!isLocalePref(pref)) return;
     applyTexts(resolveLocale(pref, navigator.language));
     void saveSettings({ locale: pref });
+  });
+
+  const boardTheme = el<HTMLSelectElement>('boardTheme');
+  boardTheme.value = settings.boardTheme;
+  boardTheme.addEventListener('change', () => {
+    if (isBoardTheme(boardTheme.value)) void saveSettings({ boardTheme: boardTheme.value });
   });
 
   const depth = el<HTMLInputElement>('depth');

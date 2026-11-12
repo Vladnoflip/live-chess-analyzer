@@ -265,5 +265,11 @@
   "lichess.error.rateLimited": "lichess asks to slow down; try again in a minute",
   "lichess.error.network": "Could not reach lichess.org",
   "lichess.error.badResponse": "Unexpected response from lichess",
-  "lichess.error.noGames": "This user has no games yet"
+  "lichess.error.noGames": "This user has no games yet",
+  "settings.boardTheme": "Board theme",
+  "popup.boardTheme": "Trainer board theme",
+  "theme.classic": "Classic",
+  "theme.wood": "Wood",
+  "theme.neon": "Neon",
+  "theme.soft": "Soft"
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react';
 import type { Square } from 'chess.js';
 import type { BoardPiece } from '../services/board.service';
 import { pieceImage } from './pieces';
@@ -6,7 +6,8 @@ import type { CandidateArrow, PvMark } from '../core/analysis.manager';
 import { arrowShape, pointsAttr, squareCenter } from '../core/arrow-geometry';
 import { textColorOn } from '../core/move-score';
 import { trackPieces, type TrackedPiece } from '../core/piece-tracking';
-import { useI18n } from '../hooks/useAnalysis';
+import { useBoardTheme, useI18n } from '../hooks/useAnalysis';
+import { boardThemeVars } from '../core/board-themes';
 
 const FILES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
 /** Slide duration for moves, ms. */
@@ -44,6 +45,7 @@ interface Drag {
  */
 export function Board({ pieces, flipped, arrows, pvMarks, lastMove, targetsFrom, onMove }: BoardProps) {
   const { t } = useI18n();
+  const { theme } = useBoardTheme();
   const [selected, setSelected] = useState<Square | null>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const nextId = useRef(0);
@@ -148,7 +150,9 @@ export function Board({ pieces, flipped, arrows, pvMarks, lastMove, targetsFrom,
 
   return (
     <svg
-      className={`board${dragging ? ' dragging' : ''}`}
+      className={`board theme-${theme}${dragging ? ' dragging' : ''}`}
+      style={boardThemeVars(theme) as CSSProperties}
+      data-theme={theme}
       viewBox="0 0 8 8"
       role="img"
       aria-label={t('board.label')}

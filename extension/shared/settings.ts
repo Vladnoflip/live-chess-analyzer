@@ -1,4 +1,5 @@
 import { isLocalePref, type LocalePref, type MessageKey } from '../../src/core/i18n';
+import { isBoardTheme, type BoardTheme } from '../../src/core/board-themes';
 
 export interface ExtensionSettings {
   readonly enabled: boolean;
@@ -22,6 +23,8 @@ export interface ExtensionSettings {
   readonly fontScale: number;
   /** UI language of the popup and the trainer page; 'auto' follows the browser. */
   readonly locale: LocalePref;
+  /** Board skin of the trainer page (the overlay draws on the site's own board). */
+  readonly boardTheme: BoardTheme;
 }
 
 export type FontId = 'system' | 'humanist' | 'rounded' | 'serif' | 'mono';
@@ -48,6 +51,7 @@ export const DEFAULT_SETTINGS: ExtensionSettings = {
   fontFamily: 'system',
   fontScale: 100,
   locale: 'auto',
+  boardTheme: 'soft',
 };
 
 export const DEPTH_LIMITS = { min: 6, max: 24 } as const;
@@ -93,5 +97,6 @@ function sanitize(raw: unknown): ExtensionSettings {
     fontFamily: typeof src.fontFamily === 'string' && src.fontFamily in FONTS ? (src.fontFamily as FontId) : DEFAULT_SETTINGS.fontFamily,
     fontScale: num('fontScale', 80, 150),
     locale: isLocalePref(src.locale) ? src.locale : DEFAULT_SETTINGS.locale,
+    boardTheme: isBoardTheme(src.boardTheme) ? src.boardTheme : DEFAULT_SETTINGS.boardTheme,
   };
 }

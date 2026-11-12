@@ -5,6 +5,7 @@ import type { DrillManager, DrillState } from '../core/drill.manager';
 import type { SoundService, SoundSettings } from '../services/sound.service';
 import type { I18n, I18nState, MessageKey, MessageParams, Msg } from '../core/i18n';
 import { translate, translateMsg } from '../core/i18n';
+import type { BoardTheme, BoardThemeStore } from '../core/board-themes';
 
 export interface AppServices {
   readonly manager: AnalysisManager;
@@ -12,6 +13,7 @@ export interface AppServices {
   readonly drill: DrillManager;
   readonly sound: SoundService;
   readonly i18n: I18n;
+  readonly boardTheme: BoardThemeStore;
 }
 
 export const AnalysisContext = createContext<AppServices | null>(null);
@@ -64,4 +66,10 @@ export function useI18n(): Translator {
     text: (m) => translateMsg(state.locale, m),
     setPref: (p) => i18n.setPref(p),
   };
+}
+
+export function useBoardTheme(): { theme: BoardTheme; setTheme(theme: BoardTheme): void } {
+  const { boardTheme } = useServices();
+  const { theme } = useSyncExternalStore(boardTheme.subscribe, boardTheme.getState);
+  return { theme, setTheme: (t) => boardTheme.setTheme(t) };
 }

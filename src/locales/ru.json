@@ -265,5 +265,11 @@
   "lichess.error.rateLimited": "lichess просит не торопиться — попробуйте через минуту",
   "lichess.error.network": "Не удалось связаться с lichess.org",
   "lichess.error.badResponse": "Неожиданный ответ от lichess",
-  "lichess.error.noGames": "У пользователя пока нет партий"
+  "lichess.error.noGames": "У пользователя пока нет партий",
+  "settings.boardTheme": "Тема доски",
+  "popup.boardTheme": "Тема доски тренажёра",
+  "theme.classic": "Классика",
+  "theme.wood": "Дерево",
+  "theme.neon": "Неон",
+  "theme.soft": "Мягкая"
 }
