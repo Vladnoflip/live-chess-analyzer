@@ -72,8 +72,13 @@ function chesscomDoc(boardId: string, opts: { flipped?: boolean; pieces?: string
 }
 
 describe('chess.com fair-play gate', () => {
+  // Observed on www.chess.com on 2026-11-13 (guest): the bot picker, a running bot game
+  // (after 1.e4 and the bot's reply) and the finished game all stay on /play/computer
+  // with <wc-chess-board id="board-play-computer">.
   it.each([
     ['/play/computer', 'board-play-computer'],
+    ['/play/computer/', 'board-play-computer'],
+    ['/play/computer/some-bot', 'board-play-computer'],
     ['/analysis', 'board-analysis-board'],
     ['/analysis/game/live/123456', 'board-analysis-board'],
   ])('allows %s', (pathname, id) => {
@@ -81,14 +86,35 @@ describe('chess.com fair-play gate', () => {
   });
 
   it.each([
+    // Games against people: never, whatever the board id.
     ['/game/live/123456', 'board-single'],
+    ['/game/live/123456', 'board-play-computer'],
+    ['/game/live/123456', 'board-analysis-board'],
     ['/play/online', 'board-play-online'],
+    ['/play/online', 'board-play-computer'],
+    ['/play/online/new', 'board-play-computer'],
     ['/game/daily/987', 'board-single'],
-    ['/play/computer', 'board-single'], // right path but a different board — refuse
-    ['/game/live/123456', 'board-play-computer'], // bot board id on a live game path — refuse
+    ['/game/daily/987', 'board-play-computer'],
+    ['/play/arena/1', 'board-play-computer'],
+    ['/tournament/live/arena/1', 'board-play-computer'],
+    ['/variants/fog-of-war/game/1', 'board-play-computer'],
+    // Look-alike paths must not pass the prefix check.
+    ['/play/computers', 'board-play-computer'],
+    ['/play/computer-online', 'board-play-computer'],
+    ['/xplay/computer', 'board-play-computer'],
+    ['/analysisx', 'board-analysis-board'],
+    // Right path, wrong board.
+    ['/play/computer', 'board-single'],
+    ['/play/computer', 'board-play-online'],
+    ['/analysis', 'board-play-computer'],
     ['/', 'board-play-computer'],
   ])('blocks %s (board #%s)', (pathname, id) => {
     expect(chesscom.isAllowedPage({ pathname }, chesscomDoc(id))).toBe(false);
+  });
+
+  it('describes the board for diagnostics', () => {
+    expect(chesscom.describeBoard(chesscomDoc('board-single'))).toBe('wc-chess-board#board-single');
+    expect(chesscom.describeBoard(new DOMParser().parseFromString('<p></p>', 'text/html'))).toBeNull();
   });
 
   it('blocks pages without a board', () => {

@@ -108,6 +108,7 @@ const browser = await puppeteer.launch({
 // worker, offscreen document, popup, trainer) and console errors from the extension.
 const runtimeErrors = [];
 const contentInfo = [];
+const idleInfo = [];
 const watch = async (target) => {
   // The service worker is watched through puppeteer's own session below (a second session closes it).
   if (!['page', 'other'].includes(target.type())) return;
@@ -118,6 +119,7 @@ const watch = async (target) => {
     session.on('Runtime.consoleAPICalled', (e) => {
       const text = e.args.map((a) => a.value ?? a.description ?? '').join(' ');
       if (text.includes('[LiveChess Analyzer] content script v')) contentInfo.push(text);
+      if (text.includes('[LiveChess Analyzer] idle on')) idleInfo.push(text);
       if (e.type === 'error' && (target.url().startsWith('chrome-extension://') || text.includes('[LiveChess Analyzer]'))) runtimeErrors.push(`${where}: console.error ${text}`);
     });
     await session.send('Runtime.enable');
@@ -356,6 +358,8 @@ try {
   await sleep(1500);
   s = await state();
   check('chess.com /game/live: overlay not shown', s.shown !== 'visible', s.shown);
+  await sleep(300);
+  check('chess.com /game/live: the refusal is logged with path and board id', idleInfo.some((t) => t.includes('idle on /game/live/123456') && t.includes('wc-chess-board#board-single')), idleInfo.join(' | ') || 'no message');
 
   check('content script announced itself in the page console', contentInfo.some((t) => t.includes(`v${JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version}`)), contentInfo[0] ?? 'no message');
   check('no uncaught exceptions or extension console errors in any context', runtimeErrors.length === 0, runtimeErrors.slice(0, 5).join(' | '));

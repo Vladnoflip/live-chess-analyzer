@@ -52,6 +52,8 @@ async function start(): Promise<void> {
   // Candidates are recomputed only when a new engine update arrives.
   let candidatesFor: EngineUpdate | null = null;
   let candidates: Candidate[] = [];
+  // Last refused page/board, logged once (see tick).
+  let refusedKey: string | null = null;
 
   onSettingsChanged((s) => {
     const searchChanged = s.depth !== settings.depth || s.multiPv !== settings.multiPv;
@@ -94,7 +96,21 @@ async function start(): Promise<void> {
   };
 
   const tick = () => {
-    if (!settings.enabled || !p.isAllowedPage(location, document)) return deactivate();
+    if (!settings.enabled) return deactivate();
+    if (!p.isAllowedPage(location, document)) {
+      // Say once per page/board why the overlay stays off, so a changed chess.com URL or
+      // board id can be reported precisely. The gate itself is unchanged.
+      const board = p.describeBoard(document);
+      const key = `${location.pathname}|${board ?? ''}`;
+      if (board && key !== refusedKey) {
+        refusedKey = key;
+        console.info(
+          `${LOG_PREFIX} idle on ${location.pathname}: ${board} is not an analysis board or a game against a bot (games against people are never analysed)`,
+        );
+      }
+      return deactivate();
+    }
+    refusedKey = null;
     const snap = p.read(document);
     if (!snap) return deactivate();
     active = true;

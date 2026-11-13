@@ -39,6 +39,11 @@ export const chesscom: Platform = {
     return ALLOWED.some((a) => a.path.test(location.pathname) && board.id === a.boardId);
   },
 
+  describeBoard(doc) {
+    const board = findBoard(doc);
+    return board ? `wc-chess-board#${board.id || '(no id)'}` : null;
+  },
+
   read(doc): BoardSnapshot | null {
     const board = findBoard(doc);
     if (!board) return null;

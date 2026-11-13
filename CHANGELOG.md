@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.7.3] — chess.com bot-game check and refusal diagnostics
+
+A report said bot games on chess.com moved to a different URL. On 2026-11-13 the live site (guest session) kept **one address for the whole bot game**: the bot picker, a running game (checked after 1.e4 and the bot's reply) and the finished game all stay on `https://www.chess.com/play/computer` with `<wc-chess-board id="board-play-computer">`. The existing gate already accepts exactly that, so the gate is unchanged. The live lichess analysis board was re-checked as well (`npm run smoke:lichess`: overlay drawn, no errors). A different address for signed-in users could not be checked.
+
+### Added
+- **Refusal diagnostics.** On a chess.com or lichess page that has a board but is not allowed, the content script logs once, with the path and the board element id: `[LiveChess Analyzer] idle on /game/live/123: wc-chess-board#board-single is not an analysis board or a game against a bot`. If chess.com ever changes the bot-game address, that line shows exactly what to add. Platforms gain `describeBoard()` for this.
+- **Fair-play gate tests.** The chess.com gate is now tested against: the observed bot pages (`/play/computer`, a trailing slash, sub-paths); games against people with every board id, including the bot board id (`/game/live`, `/game/daily`, `/play/online`, `/play/online/new`, arenas, tournaments, variants); look-alike paths (`/play/computers`, `/play/computer-online`, `/xplay/computer`, `/analysisx`); and the right path with the wrong board.
+- **E2E check** that the refusal on a `/game/live` page is logged with its path and board id, and that no overlay is shown there.
+
+### Unchanged
+- Games against people are never analysed. The gate still requires both an allowed path **and** the matching board id on chess.com, and `/analysis` on lichess.
+
 ## [0.7.2] — Extension diagnostics and safer content script
 
 A report said the extension showed nothing after updating to 0.7.x. No crash could be reproduced: the 0.7.1 build draws the overlay on the live `lichess.org/analysis` page with no exceptions, the fixture e2e suite passes, and every file referenced by the manifest exists. chess.com could not be tested live (it answers automated browsers with 403). The most likely causes are on the installation side: a self-packed `.crx` (Chrome on Windows and macOS disables off-store `.crx` extensions), or a Chrome profile still running the previous build (every build gives the scripts new hashed names, so the old manifest points to files that no longer exist). This release makes such failures visible and keeps the content script running.
@@ -155,6 +167,7 @@ Expanded opening book and granular trainer categories.
 - A full-game review with best/good/inaccuracy/mistake/blunder classification by win-probability loss.
 - Unit tests and integration tests that run the real Stockfish WASM in Node.
 
+[0.7.3]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.3
 [0.7.2]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.2
 [0.7.1]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.1
 [0.7.0]: https://github.com/Vladnoflip/live-chess-analyzer/releases/tag/v0.7.0

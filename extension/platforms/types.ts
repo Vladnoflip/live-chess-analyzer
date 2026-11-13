@@ -27,4 +27,6 @@ export interface Platform {
    */
   isAllowedPage(location: Pick<Location, 'pathname'>, doc: Document): boolean;
   read(doc: Document): BoardSnapshot | null;
+  /** Board element as "tag#id" for diagnostics (why a page was refused), or null without a board. */
+  describeBoard(doc: Document): string | null;
 }

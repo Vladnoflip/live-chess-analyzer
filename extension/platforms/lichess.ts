@@ -25,6 +25,10 @@ export const lichess: Platform = {
     return ALLOWED_PATH.test(location.pathname) && doc.querySelector('cg-board') !== null;
   },
 
+  describeBoard(doc) {
+    return doc.querySelector('cg-board') ? 'cg-board' : null;
+  },
+
   read(doc): BoardSnapshot | null {
     const board = doc.querySelector<HTMLElement>('cg-board');
     const wrap = doc.querySelector<HTMLElement>('.cg-wrap');
